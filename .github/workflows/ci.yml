@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build:
+    # fxDb is a Windows desktop app (JavaFX win-classifier natives, SQLite native lib, the
+    # jpackage/WiX packaging script) - windows-latest matches every contributor's actual
+    # dev/build environment, so this is the platform worth testing against.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build and test
+        run: .\mvnw.cmd -B package
