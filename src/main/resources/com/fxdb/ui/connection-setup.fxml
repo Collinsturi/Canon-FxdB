@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.fxdb.ui.controller.ConnectionSetupController">
+    <top>
+        <Label text="Step 1: Connect Source and Target" style="-fx-font-size: 18px; -fx-font-weight: bold;">
+            <BorderPane.margin>
+                <Insets top="10" right="10" bottom="0" left="10"/>
+            </BorderPane.margin>
+        </Label>
+    </top>
+    <center>
+        <HBox spacing="20">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                <Label text="Source" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="sourceKind" promptText="Database or File"/>
+
+                <VBox fx:id="sourceDbBox" spacing="6">
+                    <TextField fx:id="sourceJdbcUrl" promptText="jdbc:postgresql://host:5432/database"/>
+                    <TextField fx:id="sourceUsername" promptText="username (optional)"/>
+                    <PasswordField fx:id="sourcePassword" promptText="password (optional)"/>
+                </VBox>
+
+                <VBox fx:id="sourceFileBox" spacing="6">
+                    <HBox spacing="6">
+                        <TextField fx:id="sourceFilePath" promptText="file path" HBox.hgrow="ALWAYS"/>
+                        <Button text="Browse..." onAction="#onBrowseSourceFile"/>
+                    </HBox>
+                    <ComboBox fx:id="sourceFormat" promptText="format"/>
+                    <TextField fx:id="sourceDelimiter" promptText="CSV delimiter (default ,)"/>
+                    <CheckBox fx:id="sourceHasHeader" text="Has header row" selected="true"/>
+                    <TextField fx:id="sourceSheetName" promptText="Excel sheet name (blank = first sheet)"/>
+                </VBox>
+
+                <Button text="Test Connection" onAction="#onTestSource"/>
+                <Label fx:id="sourceStatus" wrapText="true"/>
+            </VBox>
+
+            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                <Label text="Target" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="targetKind" promptText="Database or File"/>
+
+                <VBox fx:id="targetDbBox" spacing="6">
+                    <TextField fx:id="targetJdbcUrl" promptText="jdbc:postgresql://host:5432/database"/>
+                    <TextField fx:id="targetUsername" promptText="username (optional)"/>
+                    <PasswordField fx:id="targetPassword" promptText="password (optional)"/>
+                </VBox>
+
+                <VBox fx:id="targetFileBox" spacing="6">
+                    <HBox spacing="6">
+                        <TextField fx:id="targetFilePath" promptText="file path" HBox.hgrow="ALWAYS"/>
+                        <Button text="Browse..." onAction="#onBrowseTargetFile"/>
+                    </HBox>
+                    <ComboBox fx:id="targetFormat" promptText="format"/>
+                    <TextField fx:id="targetDelimiter" promptText="CSV delimiter (default ,)"/>
+                    <CheckBox fx:id="targetHasHeader" text="Has header row" selected="true"/>
+                    <TextField fx:id="targetSheetName" promptText="Excel sheet name (blank = first sheet)"/>
+                </VBox>
+
+                <Button text="Test Connection" onAction="#onTestTarget"/>
+                <Label fx:id="targetStatus" wrapText="true"/>
+            </VBox>
+        </HBox>
+    </center>
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <Button fx:id="nextButton" text="Next" onAction="#onNext"/>
+        </HBox>
+    </bottom>
+</BorderPane>
