@@ -1,0 +1,17 @@
+# Normalize everything to LF in the repository; Git converts to each platform's native
+# line ending on checkout per the user's core.autocrlf, so this is what stops every commit
+# from warning "LF will be replaced by CRLF" on Windows.
+* text=auto
+
+# Windows batch files genuinely need CRLF to run reliably.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# The POSIX half of the Maven wrapper needs LF even on a Windows checkout.
+/mvnw text eol=lf
+
+# Binary - never touch these.
+*.jar binary
+*.png binary
+*.ico binary
+*.xlsx binary
