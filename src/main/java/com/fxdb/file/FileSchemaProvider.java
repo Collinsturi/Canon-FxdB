@@ -10,6 +10,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -27,6 +28,11 @@ public class FileSchemaProvider implements SchemaProvider {
 
     @Override
     public List<String> listTables() {
+        if (!Files.exists(config.path())) {
+            // A target file that doesn't exist yet has no existing "tables" to match against -
+            // MappingEngine should treat every selected source table as going into a new one.
+            return List.of();
+        }
         return switch (config.format()) {
             case CSV, JSON -> List.of(config.fileBaseName());
             case EXCEL -> listExcelSheetNames();
