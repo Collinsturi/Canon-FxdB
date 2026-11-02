@@ -1,5 +1,9 @@
 package com.fxdb.ui;
 
+import com.fxdb.db.jdbc.ExternalDriverLoader;
+
+import java.nio.file.Path;
+
 /**
  * A plain main class that is NOT itself a javafx.application.Application subclass.
  * JavaFX refuses to start when the Application subclass is launched directly via the
@@ -11,6 +15,7 @@ package com.fxdb.ui;
 public final class Launcher {
 
     public static void main(String[] args) {
+        ExternalDriverLoader.loadDriversFrom(Path.of("drivers"));
         MainApp.main(args);
     }
 }
