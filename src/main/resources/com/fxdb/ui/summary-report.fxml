@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.fxdb.ui.controller.SummaryReportController">
+    <top>
+        <Label text="Step 5: Migration Summary" style="-fx-font-size: 18px; -fx-font-weight: bold;">
+            <BorderPane.margin>
+                <Insets top="10" right="10" bottom="0" left="10"/>
+            </BorderPane.margin>
+        </Label>
+    </top>
+    <center>
+        <VBox spacing="8">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <Label fx:id="headlineLabel" style="-fx-font-weight: bold;"/>
+            <TableView fx:id="resultsTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="tableNameColumn" text="Table" prefWidth="160"/>
+                    <TableColumn fx:id="rowsReadColumn" text="Read" prefWidth="80"/>
+                    <TableColumn fx:id="rowsWrittenColumn" text="Written" prefWidth="80"/>
+                    <TableColumn fx:id="rowsSkippedColumn" text="Skipped" prefWidth="80"/>
+                    <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+                    <TableColumn fx:id="errorCountColumn" text="Errors" prefWidth="80"/>
+                </columns>
+            </TableView>
+            <Label text="Errors:"/>
+            <TextArea fx:id="errorsArea" editable="false" prefHeight="150"/>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <Button text="Export Report..." onAction="#onExportReport"/>
+            <Button text="Done" onAction="#onDone"/>
+        </HBox>
+    </bottom>
+</BorderPane>
