@@ -1,5 +1,8 @@
 # fxDb
 
+[![CI](https://github.com/Collinsturi/Canon/actions/workflows/ci.yml/badge.svg)](https://github.com/Collinsturi/Canon/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A JavaFX desktop app for migrating data between databases and flat files, regardless of
 what either side actually is - PostgreSQL, MySQL, SQL Server, Oracle, SQLite, CSV, JSON or
 Excel can all be a source or a target. Pick a source, pick a target, review the auto-matched
