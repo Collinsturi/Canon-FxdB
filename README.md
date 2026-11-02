@@ -14,12 +14,15 @@ and profile persistence, `transfer` = the engine, `ui` = the JavaFX wizard).
   plain classpath (which is what IntelliJ's Run button does) - `Launcher` is a thin,
   non-`Application` indirection that gets past that check.
 - From Maven: `mvn javafx:run` (unaffected by the above; the plugin launches its own way).
+  No Maven installed? Use `./mvnw` (`mvnw.cmd` on Windows) instead - it downloads the pinned
+  Maven version on first use, so there's nothing to install first.
 
 ## Testing
 
-`mvn test` - everything runs against SQLite temp files, H2 in-memory databases, and small
+`./mvnw test` - everything runs against SQLite temp files, H2 in-memory databases, and small
 fixture files, so no external services are needed. Real-vendor testing against Postgres/
 MySQL/SQL Server/Oracle is manual/exploratory (e.g. local Docker containers), not automated.
+CI (`.github/workflows/ci.yml`) runs the same build on every push and pull request.
 
 ## Packaging a native Windows build
 
@@ -43,3 +46,7 @@ to do by default. Drop the driver jar into a `drivers/` folder next to the app (
 `fxDb.exe` for a packaged build, or the repo root when running from an IDE/Maven) and it'll
 be picked up automatically at startup via `ExternalDriverLoader` - no rebuild needed. The same
 mechanism works for any other JDBC driver not already on the classpath.
+
+## License
+
+MIT - see [LICENSE](LICENSE).

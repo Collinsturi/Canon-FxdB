@@ -32,11 +32,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = $PSScriptRoot
-$mvnHome = "C:\Users\CollinsMachukaMoturi\.m2\wrapper\dists\apache-maven-3.9.16\56ba1f9f"
-$mvn = Join-Path $mvnHome "bin\mvn.cmd"
-if (-not (Test-Path $mvn)) {
-    $mvn = "mvn"  # fall back to whatever's on PATH on another machine
-}
+$mvn = Join-Path $repoRoot "mvnw.cmd"  # self-bootstraps the pinned Maven version; no local install needed
 
 if ($Type -ne "app-image") {
     $wix = Get-Command candle.exe -ErrorAction SilentlyContinue
