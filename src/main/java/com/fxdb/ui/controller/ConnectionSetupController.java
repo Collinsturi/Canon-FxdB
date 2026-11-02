@@ -7,6 +7,8 @@ import com.fxdb.file.FileFormat;
 import com.fxdb.ui.MigrationWizardContext;
 import com.fxdb.ui.Navigator;
 import com.fxdb.ui.WizardScreen;
+import com.fxdb.ui.onboarding.OnboardingTour;
+import com.fxdb.ui.onboarding.TourStep;
 import com.fxdb.ui.support.ConnectionSelection;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -84,6 +86,13 @@ public class ConnectionSetupController implements WizardScreen {
         dbBox.setManaged(true);
         fileBox.setVisible(false);
         fileBox.setManaged(false);
+    }
+
+    @FXML
+    private void onShowTour() {
+        javafx.stage.Stage stage = (javafx.stage.Stage) sourceStatus.getScene().getWindow();
+        OnboardingTour.show(stage, TourStep.wizardOverview(), () -> {
+        });
     }
 
     @FXML
