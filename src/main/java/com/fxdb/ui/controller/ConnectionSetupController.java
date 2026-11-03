@@ -3,6 +3,7 @@ package com.fxdb.ui.controller;
 import com.fxdb.core.SchemaProvider;
 import com.fxdb.db.jdbc.DriverRegistry;
 import com.fxdb.db.jdbc.JdbcConnectionConfig;
+import com.fxdb.db.jdbc.SqlServerConnectionOptions;
 import com.fxdb.file.FileConnectionConfig;
 import com.fxdb.file.FileFormat;
 import com.fxdb.ui.MigrationWizardContext;
@@ -37,6 +38,11 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private TextField sourceDatabase;
     @FXML private HBox sourceSqliteBox;
     @FXML private TextField sourceSqlitePath;
+    @FXML private VBox sourceSqlServerBox;
+    @FXML private ComboBox<SqlServerConnectionOptions.Authentication> sourceSqlServerAuth;
+    @FXML private CheckBox sourceSqlServerEncrypt;
+    @FXML private CheckBox sourceSqlServerTrustCert;
+    @FXML private TextField sourceSqlServerExtraProps;
     @FXML private CheckBox sourceAdvancedUrl;
     @FXML private TextField sourceJdbcUrl;
     @FXML private TextField sourceUsername;
@@ -58,6 +64,11 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private TextField targetDatabase;
     @FXML private HBox targetSqliteBox;
     @FXML private TextField targetSqlitePath;
+    @FXML private VBox targetSqlServerBox;
+    @FXML private ComboBox<SqlServerConnectionOptions.Authentication> targetSqlServerAuth;
+    @FXML private CheckBox targetSqlServerEncrypt;
+    @FXML private CheckBox targetSqlServerTrustCert;
+    @FXML private TextField targetSqlServerExtraProps;
     @FXML private CheckBox targetAdvancedUrl;
     @FXML private TextField targetJdbcUrl;
     @FXML private TextField targetUsername;
@@ -96,6 +107,15 @@ public class ConnectionSetupController implements WizardScreen {
 
         sourceProvider.setItems(javafx.collections.FXCollections.observableArrayList(DriverRegistry.values()));
         targetProvider.setItems(javafx.collections.FXCollections.observableArrayList(DriverRegistry.values()));
+
+        sourceSqlServerAuth.setItems(javafx.collections.FXCollections.observableArrayList(
+                SqlServerConnectionOptions.Authentication.values()));
+        targetSqlServerAuth.setItems(javafx.collections.FXCollections.observableArrayList(
+                SqlServerConnectionOptions.Authentication.values()));
+        sourceSqlServerAuth.getSelectionModel().select(SqlServerConnectionOptions.Authentication.SQL_SERVER);
+        targetSqlServerAuth.getSelectionModel().select(SqlServerConnectionOptions.Authentication.SQL_SERVER);
+        sourceSqlServerEncrypt.setSelected(true);
+        targetSqlServerEncrypt.setSelected(true);
 
         bindSimpleUrlBuilder(true);
         bindSimpleUrlBuilder(false);
@@ -136,6 +156,10 @@ public class ConnectionSetupController implements WizardScreen {
         });
         (isSource ? sourceDatabase : targetDatabase).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
         (isSource ? sourceSqlitePath : targetSqlitePath).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        (isSource ? sourceSqlServerAuth : targetSqlServerAuth).valueProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        (isSource ? sourceSqlServerEncrypt : targetSqlServerEncrypt).selectedProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        (isSource ? sourceSqlServerTrustCert : targetSqlServerTrustCert).selectedProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        (isSource ? sourceSqlServerExtraProps : targetSqlServerExtraProps).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
         advancedUrl.selectedProperty().addListener((obs, old, val) -> updateDbFieldVisibility(isSource));
     }
 
@@ -143,6 +167,7 @@ public class ConnectionSetupController implements WizardScreen {
         ComboBox<DriverRegistry> provider = isSource ? sourceProvider : targetProvider;
         VBox serverBox = isSource ? sourceServerBox : targetServerBox;
         HBox sqliteBox = isSource ? sourceSqliteBox : targetSqliteBox;
+        VBox sqlServerBox = isSource ? sourceSqlServerBox : targetSqlServerBox;
         CheckBox advancedUrl = isSource ? sourceAdvancedUrl : targetAdvancedUrl;
         TextField jdbcUrl = isSource ? sourceJdbcUrl : targetJdbcUrl;
 
@@ -150,11 +175,14 @@ public class ConnectionSetupController implements WizardScreen {
         boolean fileBased = provider.getValue() != null && provider.getValue().isFileBased();
         boolean showServer = !advanced && !fileBased;
         boolean showSqlite = !advanced && fileBased;
+        boolean showSqlServerOptions = showServer && provider.getValue() == DriverRegistry.SQLSERVER;
 
         serverBox.setVisible(showServer);
         serverBox.setManaged(showServer);
         sqliteBox.setVisible(showSqlite);
         sqliteBox.setManaged(showSqlite);
+        sqlServerBox.setVisible(showSqlServerOptions);
+        sqlServerBox.setManaged(showSqlServerOptions);
         jdbcUrl.setEditable(advanced);
 
         recomputeUrl(isSource);
@@ -196,7 +224,22 @@ public class ConnectionSetupController implements WizardScreen {
         } catch (NumberFormatException | NullPointerException e) {
             port = selected.defaultPort();
         }
-        jdbcUrl.setText(selected.buildUrl(host, port, database));
+
+        String url = selected.buildUrl(host, port, database);
+        if (selected == DriverRegistry.SQLSERVER) {
+            url = buildSqlServerOptions(isSource).appendTo(url);
+        }
+        jdbcUrl.setText(url);
+    }
+
+    private SqlServerConnectionOptions buildSqlServerOptions(boolean isSource) {
+        var authentication = (isSource ? sourceSqlServerAuth : targetSqlServerAuth).getValue();
+        boolean encrypt = (isSource ? sourceSqlServerEncrypt : targetSqlServerEncrypt).isSelected();
+        boolean trustServerCertificate = (isSource ? sourceSqlServerTrustCert : targetSqlServerTrustCert).isSelected();
+        String extraProps = blankToNull((isSource ? sourceSqlServerExtraProps : targetSqlServerExtraProps).getText());
+        return new SqlServerConnectionOptions(
+                authentication == null ? SqlServerConnectionOptions.Authentication.SQL_SERVER : authentication,
+                encrypt, trustServerCertificate, extraProps);
     }
 
     private void bindKindVisibility(ComboBox<String> kind, VBox dbBox, VBox fileBox) {

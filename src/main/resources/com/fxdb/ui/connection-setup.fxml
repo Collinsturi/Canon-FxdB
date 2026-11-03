@@ -55,6 +55,21 @@
                             <Button text="Browse..." onAction="#onBrowseSourceSqlite"/>
                         </HBox>
 
+                        <VBox fx:id="sourceSqlServerBox" spacing="6">
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Auth:" minWidth="80"/>
+                                <ComboBox fx:id="sourceSqlServerAuth" prefWidth="260"/>
+                            </HBox>
+                            <HBox spacing="12" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="sourceSqlServerEncrypt" text="Encrypt connection"/>
+                                <CheckBox fx:id="sourceSqlServerTrustCert" text="Trust server certificate"/>
+                            </HBox>
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Other props:" minWidth="80"/>
+                                <TextField fx:id="sourceSqlServerExtraProps" promptText="key=value;key2=value2" HBox.hgrow="ALWAYS"/>
+                            </HBox>
+                        </VBox>
+
                         <CheckBox fx:id="sourceAdvancedUrl" text="Enter full JDBC URL manually"/>
                         <TextField fx:id="sourceJdbcUrl" promptText="jdbc:postgresql://host:5432/database" editable="false"/>
 
@@ -117,6 +132,21 @@
                             <TextField fx:id="targetSqlitePath" promptText="path to .sqlite file" HBox.hgrow="ALWAYS"/>
                             <Button text="Browse..." onAction="#onBrowseTargetSqlite"/>
                         </HBox>
+
+                        <VBox fx:id="targetSqlServerBox" spacing="6">
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Auth:" minWidth="80"/>
+                                <ComboBox fx:id="targetSqlServerAuth" prefWidth="260"/>
+                            </HBox>
+                            <HBox spacing="12" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="targetSqlServerEncrypt" text="Encrypt connection"/>
+                                <CheckBox fx:id="targetSqlServerTrustCert" text="Trust server certificate"/>
+                            </HBox>
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Other props:" minWidth="80"/>
+                                <TextField fx:id="targetSqlServerExtraProps" promptText="key=value;key2=value2" HBox.hgrow="ALWAYS"/>
+                            </HBox>
+                        </VBox>
 
                         <CheckBox fx:id="targetAdvancedUrl" text="Enter full JDBC URL manually"/>
                         <TextField fx:id="targetJdbcUrl" promptText="jdbc:postgresql://host:5432/database" editable="false"/>
