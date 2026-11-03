@@ -16,45 +16,41 @@
         </HBox>
     </top>
     <center>
-        <HBox spacing="16" alignment="CENTER">
-            <padding>
-                <Insets top="10" right="10" bottom="10" left="10"/>
-            </padding>
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+            <VBox spacing="10" alignment="TOP_CENTER">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
 
-            <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;" HBox.hgrow="ALWAYS">
-                <VBox spacing="10" style="-fx-background-color: #fafafa; -fx-border-color: #cccccc; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 14;">
+                <VBox spacing="6" maxWidth="640" style="-fx-background-color: #fafafa; -fx-border-color: #cccccc; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 12;">
                     <Label text="Source" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
 
                     <HBox spacing="6" alignment="CENTER_LEFT">
-                        <Label text="Connect via:" minWidth="90"/>
-                        <ComboBox fx:id="sourceKind" promptText="Database or File" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Label text="Connect via:" minWidth="80"/>
+                        <ComboBox fx:id="sourceKind" promptText="Database or File" prefWidth="160"/>
                     </HBox>
 
-                    <VBox fx:id="sourceDbBox" spacing="8">
+                    <VBox fx:id="sourceDbBox" spacing="6">
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Label text="Provider:" minWidth="90"/>
-                            <ComboBox fx:id="sourceProvider" promptText="Provider" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Label text="Provider:" minWidth="80"/>
+                            <ComboBox fx:id="sourceProvider" promptText="Provider" prefWidth="160"/>
                         </HBox>
 
-                        <VBox fx:id="sourceServerBox" spacing="8">
-                            <GridPane hgap="6" vgap="8">
-                                <columnConstraints>
-                                    <ColumnConstraints minWidth="90"/>
-                                    <ColumnConstraints percentWidth="60"/>
-                                    <ColumnConstraints minWidth="40"/>
-                                    <ColumnConstraints percentWidth="25"/>
-                                </columnConstraints>
-                                <Label text="Host:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                <TextField fx:id="sourceHost" promptText="localhost" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                                <Label text="Port:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-                                <TextField fx:id="sourcePort" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
-                                <Label text="Database:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                <TextField fx:id="sourceDatabase" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
-                            </GridPane>
+                        <VBox fx:id="sourceServerBox" spacing="6">
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Host:" minWidth="80"/>
+                                <TextField fx:id="sourceHost" promptText="localhost" prefWidth="220"/>
+                                <Label text="Port:"/>
+                                <TextField fx:id="sourcePort" prefWidth="70"/>
+                            </HBox>
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Database:" minWidth="80"/>
+                                <TextField fx:id="sourceDatabase" HBox.hgrow="ALWAYS"/>
+                            </HBox>
                         </VBox>
 
                         <HBox fx:id="sourceSqliteBox" spacing="6" alignment="CENTER_LEFT">
-                            <Label text="File:" minWidth="90"/>
+                            <Label text="File:" minWidth="80"/>
                             <TextField fx:id="sourceSqlitePath" promptText="path to .sqlite file" HBox.hgrow="ALWAYS"/>
                             <Button text="Browse..." onAction="#onBrowseSourceSqlite"/>
                         </HBox>
@@ -63,10 +59,10 @@
                         <TextField fx:id="sourceJdbcUrl" promptText="jdbc:postgresql://host:5432/database" editable="false"/>
 
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Label text="Username:" minWidth="90"/>
-                            <TextField fx:id="sourceUsername" promptText="optional" HBox.hgrow="ALWAYS"/>
+                            <Label text="Username:" minWidth="80"/>
+                            <TextField fx:id="sourceUsername" promptText="optional" prefWidth="160"/>
                             <Label text="Password:"/>
-                            <PasswordField fx:id="sourcePassword" promptText="optional" HBox.hgrow="ALWAYS"/>
+                            <PasswordField fx:id="sourcePassword" promptText="optional" prefWidth="160"/>
                         </HBox>
                     </VBox>
 
@@ -81,47 +77,43 @@
                         <TextField fx:id="sourceSheetName" promptText="Excel sheet name (blank = first sheet)"/>
                     </VBox>
 
-                    <Button text="Test Connection" onAction="#onTestSource"/>
-                    <Label fx:id="sourceStatus" wrapText="true"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="Test Connection" onAction="#onTestSource"/>
+                        <Label fx:id="sourceStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
+                    </HBox>
                 </VBox>
-            </ScrollPane>
 
-            <Label text="&#8594;" style="-fx-font-size: 28px; -fx-text-fill: #999999;"/>
+                <Label text="&#8595;" style="-fx-font-size: 20px; -fx-text-fill: #999999;"/>
 
-            <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-background-color: transparent;" HBox.hgrow="ALWAYS">
-                <VBox spacing="10" style="-fx-background-color: #fafafa; -fx-border-color: #cccccc; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 14;">
+                <VBox spacing="6" maxWidth="640" style="-fx-background-color: #fafafa; -fx-border-color: #cccccc; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 12;">
                     <Label text="Target" style="-fx-font-size: 15px; -fx-font-weight: bold;"/>
 
                     <HBox spacing="6" alignment="CENTER_LEFT">
-                        <Label text="Connect via:" minWidth="90"/>
-                        <ComboBox fx:id="targetKind" promptText="Database or File" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Label text="Connect via:" minWidth="80"/>
+                        <ComboBox fx:id="targetKind" promptText="Database or File" prefWidth="160"/>
                     </HBox>
 
-                    <VBox fx:id="targetDbBox" spacing="8">
+                    <VBox fx:id="targetDbBox" spacing="6">
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Label text="Provider:" minWidth="90"/>
-                            <ComboBox fx:id="targetProvider" promptText="Provider" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Label text="Provider:" minWidth="80"/>
+                            <ComboBox fx:id="targetProvider" promptText="Provider" prefWidth="160"/>
                         </HBox>
 
-                        <VBox fx:id="targetServerBox" spacing="8">
-                            <GridPane hgap="6" vgap="8">
-                                <columnConstraints>
-                                    <ColumnConstraints minWidth="90"/>
-                                    <ColumnConstraints percentWidth="60"/>
-                                    <ColumnConstraints minWidth="40"/>
-                                    <ColumnConstraints percentWidth="25"/>
-                                </columnConstraints>
-                                <Label text="Host:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                                <TextField fx:id="targetHost" promptText="localhost" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-                                <Label text="Port:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
-                                <TextField fx:id="targetPort" GridPane.rowIndex="0" GridPane.columnIndex="3"/>
-                                <Label text="Database:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                                <TextField fx:id="targetDatabase" GridPane.rowIndex="1" GridPane.columnIndex="1" GridPane.columnSpan="3"/>
-                            </GridPane>
+                        <VBox fx:id="targetServerBox" spacing="6">
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Host:" minWidth="80"/>
+                                <TextField fx:id="targetHost" promptText="localhost" prefWidth="220"/>
+                                <Label text="Port:"/>
+                                <TextField fx:id="targetPort" prefWidth="70"/>
+                            </HBox>
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Database:" minWidth="80"/>
+                                <TextField fx:id="targetDatabase" HBox.hgrow="ALWAYS"/>
+                            </HBox>
                         </VBox>
 
                         <HBox fx:id="targetSqliteBox" spacing="6" alignment="CENTER_LEFT">
-                            <Label text="File:" minWidth="90"/>
+                            <Label text="File:" minWidth="80"/>
                             <TextField fx:id="targetSqlitePath" promptText="path to .sqlite file" HBox.hgrow="ALWAYS"/>
                             <Button text="Browse..." onAction="#onBrowseTargetSqlite"/>
                         </HBox>
@@ -130,10 +122,10 @@
                         <TextField fx:id="targetJdbcUrl" promptText="jdbc:postgresql://host:5432/database" editable="false"/>
 
                         <HBox spacing="6" alignment="CENTER_LEFT">
-                            <Label text="Username:" minWidth="90"/>
-                            <TextField fx:id="targetUsername" promptText="optional" HBox.hgrow="ALWAYS"/>
+                            <Label text="Username:" minWidth="80"/>
+                            <TextField fx:id="targetUsername" promptText="optional" prefWidth="160"/>
                             <Label text="Password:"/>
-                            <PasswordField fx:id="targetPassword" promptText="optional" HBox.hgrow="ALWAYS"/>
+                            <PasswordField fx:id="targetPassword" promptText="optional" prefWidth="160"/>
                         </HBox>
                     </VBox>
 
@@ -148,11 +140,13 @@
                         <TextField fx:id="targetSheetName" promptText="Excel sheet name (blank = first sheet)"/>
                     </VBox>
 
-                    <Button text="Test Connection" onAction="#onTestTarget"/>
-                    <Label fx:id="targetStatus" wrapText="true"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Button text="Test Connection" onAction="#onTestTarget"/>
+                        <Label fx:id="targetStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
+                    </HBox>
                 </VBox>
-            </ScrollPane>
-        </HBox>
+            </VBox>
+        </ScrollPane>
     </center>
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT">
