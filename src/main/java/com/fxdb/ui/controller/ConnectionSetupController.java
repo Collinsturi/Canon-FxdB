@@ -19,6 +19,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -53,6 +54,7 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private CheckBox sourceHasHeader;
     @FXML private TextField sourceSheetName;
     @FXML private Label sourceStatus;
+    @FXML private FlowPane sourceTableList;
 
     @FXML private ComboBox<String> targetKind;
     @FXML private VBox targetDbBox;
@@ -79,6 +81,7 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private CheckBox targetHasHeader;
     @FXML private TextField targetSheetName;
     @FXML private Label targetStatus;
+    @FXML private FlowPane targetTableList;
 
     private Navigator navigator;
     private boolean sourcePortTouchedByUser;
@@ -323,17 +326,27 @@ public class ConnectionSetupController implements WizardScreen {
 
     private void testConnection(boolean isSource) {
         Label status = isSource ? sourceStatus : targetStatus;
+        FlowPane tableList = isSource ? sourceTableList : targetTableList;
+        tableList.getChildren().clear();
         try {
             ConnectionSelection selection = buildSelection(isSource);
             try (SchemaProvider provider = selection.createSchemaProvider()) {
                 List<String> tables = provider.listTables();
                 status.setText("Connected successfully - " + tables.size() + " table(s) found");
                 status.setStyle("-fx-text-fill: green;");
+                tables.stream().sorted().forEach(table -> tableList.getChildren().add(tableChip(table)));
             }
         } catch (Exception e) {
             status.setText("Failed: " + e.getMessage());
             status.setStyle("-fx-text-fill: red;");
         }
+    }
+
+    private Label tableChip(String tableName) {
+        Label chip = new Label(tableName);
+        chip.setStyle("-fx-background-color: #e8e8e8; -fx-background-radius: 10; "
+                + "-fx-padding: 2 8 2 8; -fx-font-size: 11px;");
+        return chip;
     }
 
     @FXML
