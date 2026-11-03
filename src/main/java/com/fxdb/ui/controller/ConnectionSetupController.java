@@ -1,6 +1,7 @@
 package com.fxdb.ui.controller;
 
 import com.fxdb.core.SchemaProvider;
+import com.fxdb.db.jdbc.DriverRegistry;
 import com.fxdb.db.jdbc.JdbcConnectionConfig;
 import com.fxdb.file.FileConnectionConfig;
 import com.fxdb.file.FileFormat;
@@ -17,6 +18,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -28,6 +30,14 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private ComboBox<String> sourceKind;
     @FXML private VBox sourceDbBox;
     @FXML private VBox sourceFileBox;
+    @FXML private ComboBox<DriverRegistry> sourceProvider;
+    @FXML private VBox sourceServerBox;
+    @FXML private TextField sourceHost;
+    @FXML private TextField sourcePort;
+    @FXML private TextField sourceDatabase;
+    @FXML private HBox sourceSqliteBox;
+    @FXML private TextField sourceSqlitePath;
+    @FXML private CheckBox sourceAdvancedUrl;
     @FXML private TextField sourceJdbcUrl;
     @FXML private TextField sourceUsername;
     @FXML private PasswordField sourcePassword;
@@ -41,6 +51,14 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private ComboBox<String> targetKind;
     @FXML private VBox targetDbBox;
     @FXML private VBox targetFileBox;
+    @FXML private ComboBox<DriverRegistry> targetProvider;
+    @FXML private VBox targetServerBox;
+    @FXML private TextField targetHost;
+    @FXML private TextField targetPort;
+    @FXML private TextField targetDatabase;
+    @FXML private HBox targetSqliteBox;
+    @FXML private TextField targetSqlitePath;
+    @FXML private CheckBox targetAdvancedUrl;
     @FXML private TextField targetJdbcUrl;
     @FXML private TextField targetUsername;
     @FXML private PasswordField targetPassword;
@@ -72,6 +90,98 @@ public class ConnectionSetupController implements WizardScreen {
 
         bindKindVisibility(sourceKind, sourceDbBox, sourceFileBox);
         bindKindVisibility(targetKind, targetDbBox, targetFileBox);
+
+        sourceProvider.setItems(javafx.collections.FXCollections.observableArrayList(DriverRegistry.values()));
+        targetProvider.setItems(javafx.collections.FXCollections.observableArrayList(DriverRegistry.values()));
+
+        bindSimpleUrlBuilder(true);
+        bindSimpleUrlBuilder(false);
+
+        sourceProvider.getSelectionModel().select(DriverRegistry.POSTGRES);
+        targetProvider.getSelectionModel().select(DriverRegistry.POSTGRES);
+    }
+
+    /**
+     * Wires the provider dropdown + host/port/database (or SQLite path) fields to
+     * recompute the JDBC URL field live, and shows/hides those fields based on the
+     * selected provider and whether "enter full JDBC URL manually" is checked.
+     */
+    private void bindSimpleUrlBuilder(boolean isSource) {
+        ComboBox<DriverRegistry> provider = isSource ? sourceProvider : targetProvider;
+        TextField port = isSource ? sourcePort : targetPort;
+        CheckBox advancedUrl = isSource ? sourceAdvancedUrl : targetAdvancedUrl;
+
+        provider.valueProperty().addListener((obs, old, value) -> {
+            if (value != null && !value.isFileBased() && (port.getText() == null || port.getText().isBlank())) {
+                port.setText(String.valueOf(value.defaultPort()));
+            }
+            updateDbFieldVisibility(isSource);
+        });
+        (isSource ? sourceHost : targetHost).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        port.textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        (isSource ? sourceDatabase : targetDatabase).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        (isSource ? sourceSqlitePath : targetSqlitePath).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        advancedUrl.selectedProperty().addListener((obs, old, val) -> updateDbFieldVisibility(isSource));
+    }
+
+    private void updateDbFieldVisibility(boolean isSource) {
+        ComboBox<DriverRegistry> provider = isSource ? sourceProvider : targetProvider;
+        VBox serverBox = isSource ? sourceServerBox : targetServerBox;
+        HBox sqliteBox = isSource ? sourceSqliteBox : targetSqliteBox;
+        CheckBox advancedUrl = isSource ? sourceAdvancedUrl : targetAdvancedUrl;
+        TextField jdbcUrl = isSource ? sourceJdbcUrl : targetJdbcUrl;
+
+        boolean advanced = advancedUrl.isSelected();
+        boolean fileBased = provider.getValue() != null && provider.getValue().isFileBased();
+        boolean showServer = !advanced && !fileBased;
+        boolean showSqlite = !advanced && fileBased;
+
+        serverBox.setVisible(showServer);
+        serverBox.setManaged(showServer);
+        sqliteBox.setVisible(showSqlite);
+        sqliteBox.setManaged(showSqlite);
+        jdbcUrl.setEditable(advanced);
+
+        recomputeUrl(isSource);
+    }
+
+    /**
+     * Rebuilds the JDBC URL field from the simple fields - unless "enter full JDBC URL
+     * manually" is checked, in which case the user's own typed URL is left untouched.
+     */
+    private void recomputeUrl(boolean isSource) {
+        CheckBox advancedUrl = isSource ? sourceAdvancedUrl : targetAdvancedUrl;
+        if (advancedUrl.isSelected()) {
+            return;
+        }
+
+        DriverRegistry selected = (isSource ? sourceProvider : targetProvider).getValue();
+        TextField jdbcUrl = isSource ? sourceJdbcUrl : targetJdbcUrl;
+        if (selected == null) {
+            return;
+        }
+
+        if (selected.isFileBased()) {
+            String path = (isSource ? sourceSqlitePath : targetSqlitePath).getText();
+            jdbcUrl.setText(path == null || path.isBlank() ? "" : DriverRegistry.buildSqliteUrl(path));
+            return;
+        }
+
+        String host = (isSource ? sourceHost : targetHost).getText();
+        String database = (isSource ? sourceDatabase : targetDatabase).getText();
+        if (host == null || host.isBlank() || database == null || database.isBlank()) {
+            jdbcUrl.setText("");
+            return;
+        }
+
+        String portText = (isSource ? sourcePort : targetPort).getText();
+        int port;
+        try {
+            port = Integer.parseInt(portText.trim());
+        } catch (NumberFormatException | NullPointerException e) {
+            port = selected.defaultPort();
+        }
+        jdbcUrl.setText(selected.buildUrl(host, port, database));
     }
 
     private void bindKindVisibility(ComboBox<String> kind, VBox dbBox, VBox fileBox) {
@@ -121,6 +231,26 @@ public class ConnectionSetupController implements WizardScreen {
         } else if (name.endsWith(".xlsx")) {
             formatBox.getSelectionModel().select(FileFormat.EXCEL);
         }
+    }
+
+    @FXML
+    private void onBrowseSourceSqlite() {
+        browseSqliteFile(sourceSqlitePath);
+    }
+
+    @FXML
+    private void onBrowseTargetSqlite() {
+        browseSqliteFile(targetSqlitePath);
+    }
+
+    private void browseSqliteFile(TextField pathField) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select SQLite database file");
+        var file = chooser.showOpenDialog(pathField.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        pathField.setText(file.getAbsolutePath());
     }
 
     @FXML

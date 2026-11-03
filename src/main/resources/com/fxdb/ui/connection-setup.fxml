@@ -25,7 +25,21 @@
                 <ComboBox fx:id="sourceKind" promptText="Database or File"/>
 
                 <VBox fx:id="sourceDbBox" spacing="6">
-                    <TextField fx:id="sourceJdbcUrl" promptText="jdbc:postgresql://host:5432/database"/>
+                    <ComboBox fx:id="sourceProvider" promptText="Provider"/>
+
+                    <VBox fx:id="sourceServerBox" spacing="6">
+                        <TextField fx:id="sourceHost" promptText="host (e.g. localhost)"/>
+                        <TextField fx:id="sourcePort" promptText="port"/>
+                        <TextField fx:id="sourceDatabase" promptText="database name"/>
+                    </VBox>
+
+                    <HBox fx:id="sourceSqliteBox" spacing="6">
+                        <TextField fx:id="sourceSqlitePath" promptText="path to .sqlite file" HBox.hgrow="ALWAYS"/>
+                        <Button text="Browse..." onAction="#onBrowseSourceSqlite"/>
+                    </HBox>
+
+                    <CheckBox fx:id="sourceAdvancedUrl" text="Enter full JDBC URL manually"/>
+                    <TextField fx:id="sourceJdbcUrl" promptText="jdbc:postgresql://host:5432/database" editable="false"/>
                     <TextField fx:id="sourceUsername" promptText="username (optional)"/>
                     <PasswordField fx:id="sourcePassword" promptText="password (optional)"/>
                 </VBox>
@@ -50,7 +64,21 @@
                 <ComboBox fx:id="targetKind" promptText="Database or File"/>
 
                 <VBox fx:id="targetDbBox" spacing="6">
-                    <TextField fx:id="targetJdbcUrl" promptText="jdbc:postgresql://host:5432/database"/>
+                    <ComboBox fx:id="targetProvider" promptText="Provider"/>
+
+                    <VBox fx:id="targetServerBox" spacing="6">
+                        <TextField fx:id="targetHost" promptText="host (e.g. localhost)"/>
+                        <TextField fx:id="targetPort" promptText="port"/>
+                        <TextField fx:id="targetDatabase" promptText="database name"/>
+                    </VBox>
+
+                    <HBox fx:id="targetSqliteBox" spacing="6">
+                        <TextField fx:id="targetSqlitePath" promptText="path to .sqlite file" HBox.hgrow="ALWAYS"/>
+                        <Button text="Browse..." onAction="#onBrowseTargetSqlite"/>
+                    </HBox>
+
+                    <CheckBox fx:id="targetAdvancedUrl" text="Enter full JDBC URL manually"/>
+                    <TextField fx:id="targetJdbcUrl" promptText="jdbc:postgresql://host:5432/database" editable="false"/>
                     <TextField fx:id="targetUsername" promptText="username (optional)"/>
                     <PasswordField fx:id="targetPassword" promptText="password (optional)"/>
                 </VBox>
