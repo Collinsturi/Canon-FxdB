@@ -70,6 +70,9 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private Label targetStatus;
 
     private Navigator navigator;
+    private boolean sourcePortTouchedByUser;
+    private boolean targetPortTouchedByUser;
+    private boolean settingPortProgrammatically;
 
     @Override
     public void init(MigrationWizardContext context, Navigator navigator) {
@@ -112,13 +115,25 @@ public class ConnectionSetupController implements WizardScreen {
         CheckBox advancedUrl = isSource ? sourceAdvancedUrl : targetAdvancedUrl;
 
         provider.valueProperty().addListener((obs, old, value) -> {
-            if (value != null && !value.isFileBased() && (port.getText() == null || port.getText().isBlank())) {
+            boolean portTouched = isSource ? sourcePortTouchedByUser : targetPortTouchedByUser;
+            if (value != null && !value.isFileBased() && !portTouched) {
+                settingPortProgrammatically = true;
                 port.setText(String.valueOf(value.defaultPort()));
+                settingPortProgrammatically = false;
             }
             updateDbFieldVisibility(isSource);
         });
         (isSource ? sourceHost : targetHost).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
-        port.textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
+        port.textProperty().addListener((obs, old, val) -> {
+            if (!settingPortProgrammatically) {
+                if (isSource) {
+                    sourcePortTouchedByUser = true;
+                } else {
+                    targetPortTouchedByUser = true;
+                }
+            }
+            recomputeUrl(isSource);
+        });
         (isSource ? sourceDatabase : targetDatabase).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
         (isSource ? sourceSqlitePath : targetSqlitePath).textProperty().addListener((obs, old, val) -> recomputeUrl(isSource));
         advancedUrl.selectedProperty().addListener((obs, old, val) -> updateDbFieldVisibility(isSource));
