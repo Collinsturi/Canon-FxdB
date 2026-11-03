@@ -27,7 +27,7 @@ public final class SplashScreen {
     public static void show(Runnable onFinished) {
         Stage stage = new Stage(StageStyle.UNDECORATED);
 
-        Label title = new Label("fxDb");
+        Label title = new Label("Canon FxdB");
         title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold; -fx-text-fill: white;");
         Label tagline = new Label("Database Migration Tool");
         tagline.setStyle("-fx-font-size: 14px; -fx-text-fill: #cccccc;");

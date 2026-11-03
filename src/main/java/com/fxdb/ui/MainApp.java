@@ -12,7 +12,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("fxDb - Database Migration Tool");
+        primaryStage.setTitle("Canon FxdB - Database Migration Tool");
         SplashScreen.show(() -> {
             Navigator navigator = new Navigator(primaryStage);
             navigator.showConnectionSetup();
