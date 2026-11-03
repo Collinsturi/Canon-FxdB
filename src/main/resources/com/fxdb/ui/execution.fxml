@@ -10,7 +10,7 @@
             <padding>
                 <Insets top="10" right="10" bottom="0" left="10"/>
             </padding>
-            <Label text="Step 4: Run the Migration" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Label text="Run the Migration" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Label text="On row error:"/>
                 <ComboBox fx:id="errorPolicyBox"/>

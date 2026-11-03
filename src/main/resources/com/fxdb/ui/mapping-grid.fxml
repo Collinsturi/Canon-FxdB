@@ -10,7 +10,7 @@
             <padding>
                 <Insets top="10" right="10" bottom="0" left="10"/>
             </padding>
-            <Label text="Step 3: Review and Adjust Column Mapping" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Label text="Review and Adjust Column Mapping" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
             <HBox spacing="10">
                 <Button text="Re-run Auto-match" onAction="#onAutoMatch"/>
                 <Button text="Save Profile..." onAction="#onSaveProfile"/>
