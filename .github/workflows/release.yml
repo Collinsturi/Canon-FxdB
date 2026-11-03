@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  installer:
+    # Needs the actual Windows installer toolchain (jpackage + WiX), so this can't run on
+    # the same job as CI - it has to produce and publish a real .exe, not just build/test.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Put WiX Toolset on PATH
+        # windows-latest ships WiX v3 (candle.exe/light.exe) but doesn't put it on PATH -
+        # it's only reachable via the $WIX env var the installer sets.
+        shell: pwsh
+        run: |
+          if ($env:WIX) {
+            Add-Content $env:GITHUB_PATH (Join-Path $env:WIX "bin")
+          } else {
+            Write-Error "WiX Toolset not found on this runner (no WIX env var) - build-installer.ps1 -Type exe needs it."
+          }
+
+      - name: Build installer
+        shell: pwsh
+        run: ./build-installer.ps1 -Type exe
+
+      - name: Publish to GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = Get-ChildItem (Join-Path $PWD "target\installer") -Filter *.exe | Select-Object -ExpandProperty FullName
+          if (-not $files) {
+            throw "No .exe found in target\installer - build-installer.ps1 must have failed silently."
+          }
+          gh release create "$env:GITHUB_REF_NAME" $files --repo "$env:GITHUB_REPOSITORY" --title "$env:GITHUB_REF_NAME" --generate-notes
+          if ($LASTEXITCODE -ne 0) {
+            # Release already exists (e.g. created by hand ahead of the tag) - attach the installer to it instead.
+            gh release upload "$env:GITHUB_REF_NAME" $files --repo "$env:GITHUB_REPOSITORY" --clobber
+            if ($LASTEXITCODE -ne 0) {
+              throw "gh release upload failed with exit code $LASTEXITCODE"
+            }
+          }

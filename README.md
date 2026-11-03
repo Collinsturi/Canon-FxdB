@@ -41,6 +41,14 @@ modules) in favor of jpackage's simpler classpath-app mode - jpackage still buil
 bundled JRE internally, just using JDK+JavaFX modules rather than trying to modularize every
 dependency.
 
+## Releasing
+
+Pushing a tag matching `v*.*.*` (e.g. `v0.1.0`) triggers `.github/workflows/release.yml`,
+which runs `build-installer.ps1 -Type exe` on `windows-latest` (WiX v3 ships on that image,
+just not on `PATH` by default - the workflow adds it from the `$WIX` env var) and attaches
+the resulting installer `.exe` to a GitHub Release for that tag, creating the release if it
+doesn't already exist.
+
 ## Adding a JDBC driver fxDb doesn't bundle
 
 Oracle's `ojdbc` driver is deliberately not bundled - its Maven Central artifact carries an
