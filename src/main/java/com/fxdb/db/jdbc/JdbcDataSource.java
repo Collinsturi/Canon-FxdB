@@ -35,7 +35,8 @@ public class JdbcDataSource implements DataSource {
         try {
             connection = DriverManager.getConnection(config.jdbcUrl(), config.username(), config.password());
         } catch (SQLException e) {
-            throw new TransferException("Failed to open source connection to " + config.jdbcUrl(), e);
+            throw new TransferException(
+                    "Failed to open source connection to " + config.jdbcUrl() + ": " + JdbcErrors.describe(e), e);
         }
         try (JdbcSchemaProvider provider = new JdbcSchemaProvider(config)) {
             schema = provider.describeTable(tableName);

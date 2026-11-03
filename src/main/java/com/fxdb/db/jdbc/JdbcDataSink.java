@@ -37,7 +37,8 @@ public class JdbcDataSink implements DataSink {
             connection = DriverManager.getConnection(config.jdbcUrl(), config.username(), config.password());
             connection.setAutoCommit(false);
         } catch (SQLException e) {
-            throw new TransferException("Failed to open target connection to " + config.jdbcUrl(), e);
+            throw new TransferException(
+                    "Failed to open target connection to " + config.jdbcUrl() + ": " + JdbcErrors.describe(e), e);
         }
 
         if (createIfMissing && !tableExists()) {

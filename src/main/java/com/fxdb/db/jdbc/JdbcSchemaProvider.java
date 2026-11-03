@@ -28,7 +28,8 @@ public class JdbcSchemaProvider implements SchemaProvider {
             try {
                 connection = DriverManager.getConnection(config.jdbcUrl(), config.username(), config.password());
             } catch (SQLException e) {
-                throw new SchemaException("Failed to connect to " + config.jdbcUrl(), e);
+                throw new SchemaException(
+                        "Failed to connect to " + config.jdbcUrl() + ": " + JdbcErrors.describe(e), e);
             }
         }
         return connection;
