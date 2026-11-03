@@ -27,6 +27,19 @@ To actually run the app, see the [README](README.md#running-it) - specifically, 
 - Keep commits focused and the message explaining *why*, not just *what* the diff shows -
   skim `git log` for the style this repo already uses.
 
+## Branching
+
+`master` is always releasable - nothing beyond trivial docs fixes is developed directly
+on it. Cut a short-lived branch per change, branched from latest `master`:
+
+- `feature/<kebab-description>` - new functionality
+- `fix/<kebab-description>` - bug fixes
+- `chore/<kebab-description>` / `docs/<kebab-description>` - everything else
+
+These mirror the `Feat:`/`Fix:`/`Chore:`/`Docs:` commit-subject prefixes already used in
+`git log`. Open a PR back into `master` and delete the branch once it's merged. There's
+no separate `dev`/integration branch - this is intentionally trunk-based.
+
 ## Reporting a bug / requesting a feature
 
 Open an issue using the templates - they ask for the minimum needed to act on it (repro steps
