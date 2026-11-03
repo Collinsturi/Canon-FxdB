@@ -96,7 +96,9 @@
                         <Button text="Test Connection" onAction="#onTestSource"/>
                         <Label fx:id="sourceStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
                     </HBox>
-                    <FlowPane fx:id="sourceTableList" hgap="6" vgap="6"/>
+                    <ScrollPane fitToWidth="true" prefHeight="90" maxHeight="90" style="-fx-background-color: transparent;">
+                        <FlowPane fx:id="sourceTableList" hgap="6" vgap="6"/>
+                    </ScrollPane>
                 </VBox>
 
                 <Label text="&#8595;" style="-fx-font-size: 20px; -fx-text-fill: #999999;"/>
@@ -175,7 +177,9 @@
                         <Button text="Test Connection" onAction="#onTestTarget"/>
                         <Label fx:id="targetStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
                     </HBox>
-                    <FlowPane fx:id="targetTableList" hgap="6" vgap="6"/>
+                    <ScrollPane fitToWidth="true" prefHeight="90" maxHeight="90" style="-fx-background-color: transparent;">
+                        <FlowPane fx:id="targetTableList" hgap="6" vgap="6"/>
+                    </ScrollPane>
                 </VBox>
             </VBox>
         </ScrollPane>

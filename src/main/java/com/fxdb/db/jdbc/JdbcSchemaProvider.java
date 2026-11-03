@@ -18,6 +18,7 @@ public class JdbcSchemaProvider implements SchemaProvider {
 
     private final JdbcConnectionConfig config;
     private Connection connection;
+    private String catalog;
 
     public JdbcSchemaProvider(JdbcConnectionConfig config) {
         this.config = config;
@@ -35,12 +36,31 @@ public class JdbcSchemaProvider implements SchemaProvider {
         return connection;
     }
 
+    /**
+     * The connection's own catalog (database). Passed explicitly to every {@link DatabaseMetaData}
+     * lookup below instead of {@code null} - per the JDBC spec, a {@code null} catalog means "match
+     * every catalog visible to this login," which on servers where one login can see several sibling
+     * databases (SQL Server and MySQL both allow this routinely) silently pulls in tables that don't
+     * belong to the database the user actually connected to.
+     */
+    private String catalog() {
+        if (catalog == null) {
+            try {
+                catalog = connection().getCatalog();
+            } catch (SQLException e) {
+                throw new SchemaException(
+                        "Failed to determine catalog for " + config.jdbcUrl() + ": " + JdbcErrors.describe(e), e);
+            }
+        }
+        return catalog;
+    }
+
     @Override
     public List<String> listTables() {
         List<String> tables = new ArrayList<>();
         try {
             DatabaseMetaData metaData = connection().getMetaData();
-            try (ResultSet rs = metaData.getTables(null, null, "%", new String[]{"TABLE", "VIEW"})) {
+            try (ResultSet rs = metaData.getTables(catalog(), null, "%", new String[]{"TABLE", "VIEW"})) {
                 while (rs.next()) {
                     tables.add(rs.getString("TABLE_NAME"));
                 }
@@ -72,7 +92,7 @@ public class JdbcSchemaProvider implements SchemaProvider {
 
     private List<Column> readColumns(DatabaseMetaData metaData, String tableName) throws SQLException {
         List<Column> columns = new ArrayList<>();
-        try (ResultSet rs = metaData.getColumns(null, null, tableName, "%")) {
+        try (ResultSet rs = metaData.getColumns(catalog(), null, tableName, "%")) {
             while (rs.next()) {
                 String name = rs.getString("COLUMN_NAME");
                 int jdbcType = rs.getInt("DATA_TYPE");
@@ -87,7 +107,7 @@ public class JdbcSchemaProvider implements SchemaProvider {
 
     private List<String> readPrimaryKeys(DatabaseMetaData metaData, String tableName) throws SQLException {
         List<String> pk = new ArrayList<>();
-        try (ResultSet rs = metaData.getPrimaryKeys(null, null, tableName)) {
+        try (ResultSet rs = metaData.getPrimaryKeys(catalog(), null, tableName)) {
             while (rs.next()) {
                 pk.add(rs.getString("COLUMN_NAME"));
             }
@@ -97,7 +117,7 @@ public class JdbcSchemaProvider implements SchemaProvider {
 
     private List<ForeignKeyRef> readForeignKeys(DatabaseMetaData metaData, String tableName) throws SQLException {
         List<ForeignKeyRef> fks = new ArrayList<>();
-        try (ResultSet rs = metaData.getImportedKeys(null, null, tableName)) {
+        try (ResultSet rs = metaData.getImportedKeys(catalog(), null, tableName)) {
             while (rs.next()) {
                 fks.add(new ForeignKeyRef(
                         rs.getString("FKCOLUMN_NAME"),

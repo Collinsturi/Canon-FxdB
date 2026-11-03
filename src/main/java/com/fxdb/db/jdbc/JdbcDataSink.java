@@ -48,7 +48,11 @@ public class JdbcDataSink implements DataSink {
 
     private boolean tableExists() {
         try {
-            var tables = connection.getMetaData().getTables(null, null, tableName, new String[]{"TABLE"});
+            // Pass the connection's own catalog explicitly - a null catalog matches every
+            // database a login can see on the server, which can falsely report a same-named
+            // table in a sibling database as already existing here.
+            String catalog = connection.getCatalog();
+            var tables = connection.getMetaData().getTables(catalog, null, tableName, new String[]{"TABLE"});
             boolean exists = tables.next();
             tables.close();
             return exists;
