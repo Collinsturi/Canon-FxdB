@@ -96,7 +96,8 @@
                         <Button text="Test Connection" onAction="#onTestSource"/>
                         <Label fx:id="sourceStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
                     </HBox>
-                    <ScrollPane fitToWidth="true" prefHeight="90" maxHeight="90" style="-fx-background-color: transparent;">
+                    <ScrollPane fx:id="sourceTableListScroll" fitToWidth="true" prefHeight="90" maxHeight="90"
+                                visible="false" managed="false" style="-fx-background-color: transparent;">
                         <FlowPane fx:id="sourceTableList" hgap="6" vgap="6"/>
                     </ScrollPane>
                 </VBox>
@@ -177,7 +178,8 @@
                         <Button text="Test Connection" onAction="#onTestTarget"/>
                         <Label fx:id="targetStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
                     </HBox>
-                    <ScrollPane fitToWidth="true" prefHeight="90" maxHeight="90" style="-fx-background-color: transparent;">
+                    <ScrollPane fx:id="targetTableListScroll" fitToWidth="true" prefHeight="90" maxHeight="90"
+                                visible="false" managed="false" style="-fx-background-color: transparent;">
                         <FlowPane fx:id="targetTableList" hgap="6" vgap="6"/>
                     </ScrollPane>
                 </VBox>

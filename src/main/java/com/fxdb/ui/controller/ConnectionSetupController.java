@@ -18,6 +18,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -54,6 +55,7 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private CheckBox sourceHasHeader;
     @FXML private TextField sourceSheetName;
     @FXML private Label sourceStatus;
+    @FXML private ScrollPane sourceTableListScroll;
     @FXML private FlowPane sourceTableList;
 
     @FXML private ComboBox<String> targetKind;
@@ -81,6 +83,7 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private CheckBox targetHasHeader;
     @FXML private TextField targetSheetName;
     @FXML private Label targetStatus;
+    @FXML private ScrollPane targetTableListScroll;
     @FXML private FlowPane targetTableList;
 
     private Navigator navigator;
@@ -326,8 +329,10 @@ public class ConnectionSetupController implements WizardScreen {
 
     private void testConnection(boolean isSource) {
         Label status = isSource ? sourceStatus : targetStatus;
+        ScrollPane tableListScroll = isSource ? sourceTableListScroll : targetTableListScroll;
         FlowPane tableList = isSource ? sourceTableList : targetTableList;
         tableList.getChildren().clear();
+        setTableListVisible(tableListScroll, false);
         try {
             ConnectionSelection selection = buildSelection(isSource);
             try (SchemaProvider provider = selection.createSchemaProvider()) {
@@ -335,11 +340,17 @@ public class ConnectionSetupController implements WizardScreen {
                 status.setText("Connected successfully - " + tables.size() + " table(s) found");
                 status.setStyle("-fx-text-fill: green;");
                 tables.stream().sorted().forEach(table -> tableList.getChildren().add(tableChip(table)));
+                setTableListVisible(tableListScroll, !tables.isEmpty());
             }
         } catch (Exception e) {
             status.setText("Failed: " + e.getMessage());
             status.setStyle("-fx-text-fill: red;");
         }
+    }
+
+    private void setTableListVisible(ScrollPane scrollPane, boolean visible) {
+        scrollPane.setVisible(visible);
+        scrollPane.setManaged(visible);
     }
 
     private Label tableChip(String tableName) {

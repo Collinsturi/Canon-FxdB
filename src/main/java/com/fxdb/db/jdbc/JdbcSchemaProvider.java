@@ -12,7 +12,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public class JdbcSchemaProvider implements SchemaProvider {
 
@@ -57,11 +60,16 @@ public class JdbcSchemaProvider implements SchemaProvider {
 
     @Override
     public List<String> listTables() {
+        Set<String> systemSchemas = systemSchemasLowerCase();
         List<String> tables = new ArrayList<>();
         try {
             DatabaseMetaData metaData = connection().getMetaData();
             try (ResultSet rs = metaData.getTables(catalog(), null, "%", new String[]{"TABLE", "VIEW"})) {
                 while (rs.next()) {
+                    String schema = rs.getString("TABLE_SCHEM");
+                    if (schema != null && systemSchemas.contains(schema.toLowerCase(Locale.ROOT))) {
+                        continue;
+                    }
                     tables.add(rs.getString("TABLE_NAME"));
                 }
             }
@@ -69,6 +77,22 @@ public class JdbcSchemaProvider implements SchemaProvider {
             throw new SchemaException("Failed to list tables", e);
         }
         return tables;
+    }
+
+    private Set<String> systemSchemasLowerCase() {
+        Set<String> schemas;
+        try {
+            schemas = DriverRegistry.fromJdbcUrl(config.jdbcUrl()).dialect().systemSchemas();
+        } catch (IllegalArgumentException e) {
+            // JDBC URL scheme isn't one of fxDb's supported providers (e.g. H2 in tests) -
+            // nothing registered to filter by, so don't exclude anything.
+            return Set.of();
+        }
+        Set<String> lowerCased = new HashSet<>();
+        for (String schema : schemas) {
+            lowerCased.add(schema.toLowerCase(Locale.ROOT));
+        }
+        return lowerCased;
     }
 
     @Override
