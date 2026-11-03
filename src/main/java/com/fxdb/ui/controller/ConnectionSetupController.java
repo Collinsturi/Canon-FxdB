@@ -327,7 +327,7 @@ public class ConnectionSetupController implements WizardScreen {
             ConnectionSelection selection = buildSelection(isSource);
             try (SchemaProvider provider = selection.createSchemaProvider()) {
                 List<String> tables = provider.listTables();
-                status.setText("OK - found " + tables.size() + " table(s): " + String.join(", ", tables));
+                status.setText("Connected successfully - " + tables.size() + " table(s) found");
                 status.setStyle("-fx-text-fill: green;");
             }
         } catch (Exception e) {
