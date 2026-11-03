@@ -70,7 +70,7 @@ public class JdbcDataSource implements DataSource {
             statement.setFetchSize(batchSize);
             resultSet = statement.executeQuery();
         } catch (SQLException e) {
-            throw new TransferException("Failed to query " + tableName, e);
+            throw new TransferException("Failed to query " + tableName + ": " + JdbcErrors.describe(e), e);
         }
         return new ResultSetBatchIterator(resultSet, batchSize);
     }
@@ -81,7 +81,8 @@ public class JdbcDataSource implements DataSource {
             try {
                 connection.close();
             } catch (SQLException e) {
-                throw new TransferException("Failed to close source connection", e);
+                throw new TransferException(
+                        "Failed to close source connection: " + JdbcErrors.describe(e), e);
             }
         }
     }
@@ -104,7 +105,8 @@ public class JdbcDataSource implements DataSource {
                     columnNames[i] = meta.getColumnLabel(i + 1);
                 }
             } catch (SQLException e) {
-                throw new TransferException("Failed to read result set metadata", e);
+                throw new TransferException(
+                        "Failed to read result set metadata: " + JdbcErrors.describe(e), e);
             }
             advance();
         }
@@ -128,7 +130,7 @@ public class JdbcDataSource implements DataSource {
                     resultSet.close();
                 }
             } catch (SQLException e) {
-                throw new TransferException("Failed while reading rows", e);
+                throw new TransferException("Failed while reading rows: " + JdbcErrors.describe(e), e);
             }
             nextBatch = rows.isEmpty() ? null : new RowBatch(rows);
         }

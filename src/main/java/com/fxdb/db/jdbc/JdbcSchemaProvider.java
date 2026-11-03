@@ -74,7 +74,7 @@ public class JdbcSchemaProvider implements SchemaProvider {
                 }
             }
         } catch (SQLException e) {
-            throw new SchemaException("Failed to list tables", e);
+            throw new SchemaException("Failed to list tables: " + JdbcErrors.describe(e), e);
         }
         return tables;
     }
@@ -110,7 +110,8 @@ public class JdbcSchemaProvider implements SchemaProvider {
 
             return new TableSchema(null, null, tableName, withPk, primaryKeys, foreignKeys);
         } catch (SQLException e) {
-            throw new SchemaException("Failed to describe table " + tableName, e);
+            throw new SchemaException(
+                    "Failed to describe table " + tableName + ": " + JdbcErrors.describe(e), e);
         }
     }
 
@@ -158,7 +159,7 @@ public class JdbcSchemaProvider implements SchemaProvider {
             try {
                 connection.close();
             } catch (SQLException e) {
-                throw new SchemaException("Failed to close connection", e);
+                throw new SchemaException("Failed to close connection: " + JdbcErrors.describe(e), e);
             }
         }
     }

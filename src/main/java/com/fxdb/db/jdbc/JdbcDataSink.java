@@ -57,7 +57,8 @@ public class JdbcDataSink implements DataSink {
             tables.close();
             return exists;
         } catch (SQLException e) {
-            throw new TransferException("Failed to check existence of table " + tableName, e);
+            throw new TransferException(
+                    "Failed to check existence of table " + tableName + ": " + JdbcErrors.describe(e), e);
         }
     }
 
@@ -68,7 +69,8 @@ public class JdbcDataSink implements DataSink {
             statement.execute(ddl);
             connection.commit();
         } catch (SQLException e) {
-            throw new TransferException("Failed to create target table " + tableName + " with DDL: " + ddl, e);
+            throw new TransferException("Failed to create target table " + tableName + " with DDL: " + ddl
+                    + " - " + JdbcErrors.describe(e), e);
         }
     }
 
@@ -88,7 +90,8 @@ public class JdbcDataSink implements DataSink {
             }
             insertStatement.executeBatch();
         } catch (SQLException e) {
-            throw new TransferException("Failed to write batch to " + tableName, e);
+            throw new TransferException(
+                    "Failed to write batch to " + tableName + ": " + JdbcErrors.describe(e), e);
         }
     }
 
@@ -107,7 +110,8 @@ public class JdbcDataSink implements DataSink {
         try {
             insertStatement = connection.prepareStatement(sql);
         } catch (SQLException e) {
-            throw new TransferException("Failed to prepare insert statement for " + tableName, e);
+            throw new TransferException(
+                    "Failed to prepare insert statement for " + tableName + ": " + JdbcErrors.describe(e), e);
         }
     }
 
@@ -116,7 +120,8 @@ public class JdbcDataSink implements DataSink {
         try {
             connection.commit();
         } catch (SQLException e) {
-            throw new TransferException("Failed to commit transfer to " + tableName, e);
+            throw new TransferException(
+                    "Failed to commit transfer to " + tableName + ": " + JdbcErrors.describe(e), e);
         }
     }
 
@@ -130,7 +135,8 @@ public class JdbcDataSink implements DataSink {
                 connection.close();
             }
         } catch (SQLException e) {
-            throw new TransferException("Failed to close target connection", e);
+            throw new TransferException(
+                    "Failed to close target connection: " + JdbcErrors.describe(e), e);
         }
     }
 }

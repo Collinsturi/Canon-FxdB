@@ -18,8 +18,16 @@ public final class JdbcErrors {
             message = e.getClass().getSimpleName();
         }
         String sqlState = e.getSQLState();
-        return sqlState == null || sqlState.isBlank()
+        String described = sqlState == null || sqlState.isBlank()
                 ? message
                 : message + " [SQLState: " + sqlState + "]";
+
+        // A failed executeBatch() (java.sql.BatchUpdateException included) commonly carries the
+        // real per-statement error as a chained exception rather than in the top-level message.
+        SQLException next = e.getNextException();
+        if (next != null && next != e) {
+            described = described + "; " + describe(next);
+        }
+        return described;
     }
 }
