@@ -1,6 +1,8 @@
 package com.fxdb.ui;
 
+import com.fxdb.core.QueryLog;
 import com.fxdb.core.exception.FxDbException;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -13,8 +15,9 @@ import java.io.IOException;
 /**
  * Swaps the wizard's five screens in and out of one Stage, handing each controller the
  * shared context. The Stage's Scene root is a persistent shell (stepper on top, current
- * screen plus a busy overlay in the center) rather than being replaced wholesale each
- * navigation, so the step indicator - and the overlay - survive across screens.
+ * screen plus a busy overlay in the center, a live query log on the bottom) rather than being
+ * replaced wholesale each navigation, so the step indicator, overlay, and query log all
+ * survive across screens.
  */
 public class Navigator {
 
@@ -24,11 +27,14 @@ public class Navigator {
     private final LoadingOverlay overlay = new LoadingOverlay();
     private final StackPane contentStack = new StackPane();
     private final BorderPane shell = new BorderPane();
+    private final QueryLogPanel queryLogPanel = new QueryLogPanel();
 
     public Navigator(Stage stage) {
         this.stage = stage;
         shell.setTop(stepper);
         shell.setCenter(contentStack);
+        shell.setBottom(queryLogPanel);
+        QueryLog.setListener(entry -> Platform.runLater(() -> queryLogPanel.append(entry)));
     }
 
     public MigrationWizardContext context() {

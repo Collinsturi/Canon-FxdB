@@ -1,6 +1,7 @@
 package com.fxdb.db.jdbc;
 
 import com.fxdb.core.DataSink;
+import com.fxdb.core.QueryLog;
 import com.fxdb.core.exception.TransferException;
 import com.fxdb.core.model.Column;
 import com.fxdb.core.model.Row;
@@ -24,6 +25,7 @@ public class JdbcDataSink implements DataSink {
     private Connection connection;
     private TableSchema targetSchema;
     private PreparedStatement insertStatement;
+    private String insertSql;
 
     public JdbcDataSink(JdbcConnectionConfig config, String tableName) {
         this.config = config;
@@ -65,6 +67,7 @@ public class JdbcDataSink implements DataSink {
     private void createTable(TableSchema schema) {
         SqlDialect dialect = DriverRegistry.fromJdbcUrl(config.jdbcUrl()).dialect();
         String ddl = dialect.createTableDdl(schema);
+        QueryLog.record(config.jdbcUrl(), ddl);
         try (Statement statement = connection.createStatement()) {
             statement.execute(ddl);
             connection.commit();
@@ -88,6 +91,7 @@ public class JdbcDataSink implements DataSink {
                 }
                 insertStatement.addBatch();
             }
+            QueryLog.record(config.jdbcUrl(), insertSql + " -- batch of " + batch.size() + " row(s)");
             insertStatement.executeBatch();
         } catch (SQLException e) {
             throw new TransferException(
@@ -105,10 +109,10 @@ public class JdbcDataSink implements DataSink {
                 .map(c -> dialect.quoteIdentifier(c.name()))
                 .collect(Collectors.joining(", "));
         String placeholders = columns.stream().map(c -> "?").collect(Collectors.joining(", "));
-        String sql = "INSERT INTO " + dialect.quoteIdentifier(tableName)
+        insertSql = "INSERT INTO " + dialect.quoteIdentifier(tableName)
                 + " (" + columnList + ") VALUES (" + placeholders + ")";
         try {
-            insertStatement = connection.prepareStatement(sql);
+            insertStatement = connection.prepareStatement(insertSql);
         } catch (SQLException e) {
             throw new TransferException(
                     "Failed to prepare insert statement for " + tableName + ": " + JdbcErrors.describe(e), e);

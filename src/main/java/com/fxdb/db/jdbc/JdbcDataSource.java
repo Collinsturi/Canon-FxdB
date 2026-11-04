@@ -1,6 +1,7 @@
 package com.fxdb.db.jdbc;
 
 import com.fxdb.core.DataSource;
+import com.fxdb.core.QueryLog;
 import com.fxdb.core.exception.TransferException;
 import com.fxdb.core.model.Row;
 import com.fxdb.core.model.RowBatch;
@@ -50,7 +51,9 @@ public class JdbcDataSource implements DataSource {
 
     @Override
     public long estimateRowCount() {
-        try (PreparedStatement ps = connection.prepareStatement("SELECT COUNT(*) FROM " + tableName);
+        String sql = "SELECT COUNT(*) FROM " + tableName;
+        QueryLog.record(config.jdbcUrl(), sql);
+        try (PreparedStatement ps = connection.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getLong(1) : -1;
         } catch (SQLException e) {
@@ -62,12 +65,14 @@ public class JdbcDataSource implements DataSource {
     public Iterator<RowBatch> readBatches(int batchSize) {
         PreparedStatement statement;
         ResultSet resultSet;
+        String sql = "SELECT * FROM " + tableName;
         try {
             statement = connection.prepareStatement(
-                    "SELECT * FROM " + tableName,
+                    sql,
                     ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY);
             statement.setFetchSize(batchSize);
+            QueryLog.record(config.jdbcUrl(), sql);
             resultSet = statement.executeQuery();
         } catch (SQLException e) {
             throw new TransferException("Failed to query " + tableName + ": " + JdbcErrors.describe(e), e);
