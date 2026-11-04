@@ -1,11 +1,27 @@
 package com.fxdb.db.jdbc.dialect;
 
+import com.fxdb.core.model.DataType;
+
 import java.util.Set;
 
 public class SqlServerDialect extends AbstractSqlDialect {
     @Override
     protected char quoteChar() {
         return '"';
+    }
+
+    @Override
+    public String sqlTypeName(DataType type) {
+        // SQL Server has none of these as ANSI SQLDialect's default assumes: no BOOLEAN (use
+        // BIT), no DOUBLE PRECISION (use FLOAT), no BLOB (use VARBINARY(MAX)), and its own
+        // TIMESTAMP means a row-version column, not a date/time value (use DATETIME2).
+        return switch (type) {
+            case BOOLEAN -> "BIT";
+            case DOUBLE -> "FLOAT";
+            case BYTES -> "VARBINARY(MAX)";
+            case TIMESTAMP -> "DATETIME2";
+            default -> super.sqlTypeName(type);
+        };
     }
 
     @Override

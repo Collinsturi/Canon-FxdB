@@ -1,6 +1,8 @@
 package com.fxdb.db.jdbc.dialect;
 
+import com.fxdb.core.model.DataType;
 import com.fxdb.core.model.TableSchema;
+import com.fxdb.db.jdbc.JdbcTypeMapper;
 
 import java.util.Set;
 
@@ -10,6 +12,17 @@ public interface SqlDialect {
     String quoteIdentifier(String identifier);
 
     String createTableDdl(TableSchema schema);
+
+    /**
+     * The column type name to use in generated DDL. Defaults to {@link JdbcTypeMapper}'s ANSI
+     * name, which several vendors don't actually accept as-is - e.g. SQL Server has neither
+     * {@code BOOLEAN} nor {@code DOUBLE PRECISION} nor {@code BLOB}, and its own {@code TIMESTAMP}
+     * means a row-version column, not a date/time value. Override per vendor where the ANSI name
+     * isn't valid.
+     */
+    default String sqlTypeName(DataType type) {
+        return JdbcTypeMapper.toAnsiSqlTypeName(type);
+    }
 
     default boolean supportsIfNotExists() {
         return true;

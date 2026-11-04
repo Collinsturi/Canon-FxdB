@@ -2,7 +2,6 @@ package com.fxdb.db.jdbc.dialect;
 
 import com.fxdb.core.model.Column;
 import com.fxdb.core.model.TableSchema;
-import com.fxdb.db.jdbc.JdbcTypeMapper;
 
 import java.util.stream.Collectors;
 
@@ -37,6 +36,6 @@ abstract class AbstractSqlDialect implements SqlDialect {
 
     private String columnDdl(Column column) {
         String nullability = column.nullable() ? "" : " NOT NULL";
-        return quoteIdentifier(column.name()) + " " + JdbcTypeMapper.toAnsiSqlTypeName(column.type()) + nullability;
+        return quoteIdentifier(column.name()) + " " + sqlTypeName(column.type()) + nullability;
     }
 }
