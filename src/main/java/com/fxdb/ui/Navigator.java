@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -21,6 +22,12 @@ import java.io.IOException;
  */
 public class Navigator {
 
+    /** Step index (0-based) from which the query log is always shown - Run and Report, the two
+     * stages where a query has actually been fired against a real database. Earlier stages
+     * (Connect/Tables/Mapping) only ever touch schema metadata, not real DMLs, so the log stays
+     * hidden there unless the user asks to see it via {@link #toggleQueryLogVisibility()}. */
+    private static final int QUERY_LOG_FORCED_FROM_STEP = 3;
+
     private final Stage stage;
     private final MigrationWizardContext context = new MigrationWizardContext();
     private final WizardStepper stepper = new WizardStepper();
@@ -28,13 +35,25 @@ public class Navigator {
     private final StackPane contentStack = new StackPane();
     private final BorderPane shell = new BorderPane();
     private final QueryLogPanel queryLogPanel = new QueryLogPanel();
+    private final Button queryLogToggle = new Button();
+
+    private int currentStepIndex = 0;
+    private boolean queryLogManuallyShown = false;
 
     public Navigator(Stage stage) {
         this.stage = stage;
-        shell.setTop(stepper);
+
+        queryLogToggle.setOnAction(e -> toggleQueryLogVisibility());
+
+        BorderPane topBar = new BorderPane();
+        topBar.setCenter(stepper);
+        topBar.setRight(queryLogToggle);
+
+        shell.setTop(topBar);
         shell.setCenter(contentStack);
         shell.setBottom(queryLogPanel);
         QueryLog.setListener(entry -> Platform.runLater(() -> queryLogPanel.append(entry)));
+        updateQueryLogVisibility();
     }
 
     public MigrationWizardContext context() {
@@ -82,6 +101,8 @@ public class Navigator {
             Parent root = loader.load();
             contentStack.getChildren().setAll(root, overlay);
             stepper.setActiveStep(stepIndex);
+            currentStepIndex = stepIndex;
+            updateQueryLogVisibility();
             Object controller = loader.getController();
             if (controller instanceof WizardScreen screen) {
                 screen.init(context, this);
@@ -93,5 +114,20 @@ public class Navigator {
         } catch (IOException e) {
             throw new FxDbException("Failed to load screen " + fxmlFileName, e);
         }
+    }
+
+    /** Lets a user override the query log's default hidden/shown state for the current stage. */
+    public void toggleQueryLogVisibility() {
+        queryLogManuallyShown = !queryLogManuallyShown;
+        updateQueryLogVisibility();
+    }
+
+    private void updateQueryLogVisibility() {
+        boolean forced = currentStepIndex >= QUERY_LOG_FORCED_FROM_STEP;
+        boolean visible = forced || queryLogManuallyShown;
+        queryLogPanel.setVisible(visible);
+        queryLogPanel.setManaged(visible);
+        queryLogToggle.setDisable(forced);
+        queryLogToggle.setText(visible ? "Hide Query Log" : "Show Query Log");
     }
 }
