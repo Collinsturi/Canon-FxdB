@@ -12,4 +12,20 @@ public class MySqlDialect extends AbstractSqlDialect {
     public Set<String> systemSchemas() {
         return Set.of("information_schema", "performance_schema", "mysql", "sys");
     }
+
+    @Override
+    public boolean supportsDatabaseCreation() {
+        return true;
+    }
+
+    @Override
+    public String adminDatabase() {
+        // MySQL allows connecting with no database selected at all.
+        return "";
+    }
+
+    @Override
+    public String createDatabaseDdl(String databaseName) {
+        return "CREATE DATABASE " + quoteIdentifier(databaseName);
+    }
 }

@@ -1,6 +1,7 @@
 package com.fxdb.ui.controller;
 
 import com.fxdb.core.SchemaProvider;
+import com.fxdb.db.jdbc.DatabaseProvisioner;
 import com.fxdb.db.jdbc.DriverRegistry;
 import com.fxdb.db.jdbc.JdbcConnectionConfig;
 import com.fxdb.db.jdbc.SqlServerConnectionOptions;
@@ -15,6 +16,7 @@ import com.fxdb.ui.onboarding.TourStep;
 import com.fxdb.ui.support.ConnectionSelection;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -84,6 +86,7 @@ public class ConnectionSetupController implements WizardScreen {
     @FXML private CheckBox targetHasHeader;
     @FXML private TextField targetSheetName;
     @FXML private Label targetStatus;
+    @FXML private Button targetCreateDatabaseButton;
     @FXML private ScrollPane targetTableListScroll;
     @FXML private FlowPane targetTableList;
 
@@ -191,6 +194,13 @@ public class ConnectionSetupController implements WizardScreen {
         sqlServerBox.setVisible(showSqlServerOptions);
         sqlServerBox.setManaged(showSqlServerOptions);
         jdbcUrl.setEditable(advanced);
+
+        if (!isSource) {
+            boolean showCreateDatabase = showServer && provider.getValue() != null
+                    && provider.getValue().dialect().supportsDatabaseCreation();
+            targetCreateDatabaseButton.setVisible(showCreateDatabase);
+            targetCreateDatabaseButton.setManaged(showCreateDatabase);
+        }
 
         recomputeUrl(isSource);
     }
@@ -359,6 +369,41 @@ public class ConnectionSetupController implements WizardScreen {
                 ex -> {
                     status.setText("Failed: " + ex.getMessage());
                     status.setStyle("-fx-text-fill: red;");
+                });
+    }
+
+    @FXML
+    private void onCreateTargetDatabase() {
+        DriverRegistry provider = targetProvider.getValue();
+        String host = targetHost.getText();
+        String database = targetDatabase.getText();
+        String username = blankToNull(targetUsername.getText());
+        String password = blankToNull(targetPassword.getText());
+
+        if (provider == null || host == null || host.isBlank() || database == null || database.isBlank()) {
+            targetStatus.setText("Failed: host and database are required");
+            targetStatus.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        int parsedPort;
+        try {
+            parsedPort = Integer.parseInt(targetPort.getText().trim());
+        } catch (NumberFormatException | NullPointerException e) {
+            parsedPort = provider.defaultPort();
+        }
+        int port = parsedPort;
+
+        BackgroundTasks.run(navigator, "Creating database...",
+                () -> DatabaseProvisioner.ensureDatabaseExists(provider, host, port, database, username, password),
+                created -> {
+                    targetStatus.setText("Database '" + database + "' "
+                            + (created ? "created" : "already exists"));
+                    targetStatus.setStyle("-fx-text-fill: green;");
+                },
+                ex -> {
+                    targetStatus.setText("Failed: " + ex.getMessage());
+                    targetStatus.setStyle("-fx-text-fill: red;");
                 });
     }
 

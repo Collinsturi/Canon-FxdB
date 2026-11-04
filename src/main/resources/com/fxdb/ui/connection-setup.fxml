@@ -176,6 +176,7 @@
 
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Button text="Test Connection" onAction="#onTestTarget"/>
+                        <Button fx:id="targetCreateDatabaseButton" text="Create Database" onAction="#onCreateTargetDatabase"/>
                         <Label fx:id="targetStatus" wrapText="true" HBox.hgrow="ALWAYS"/>
                     </HBox>
                     <ScrollPane fx:id="targetTableListScroll" fitToWidth="true" prefHeight="90" maxHeight="90"

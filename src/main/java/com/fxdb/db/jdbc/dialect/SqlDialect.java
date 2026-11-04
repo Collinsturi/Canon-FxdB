@@ -25,4 +25,23 @@ public interface SqlDialect {
     default Set<String> systemSchemas() {
         return Set.of();
     }
+
+    /** True for vendors where a brand-new database is something fxDb can create via plain SQL. */
+    default boolean supportsDatabaseCreation() {
+        return false;
+    }
+
+    /**
+     * The database to connect to in order to issue {@link #createDatabaseDdl}, since you can't
+     * create a database from a connection to that same database before it exists - e.g.
+     * Postgres's {@code postgres} maintenance database, SQL Server's {@code master}. Empty
+     * string for a vendor that allows connecting without selecting any database at all (MySQL).
+     */
+    default String adminDatabase() {
+        throw new UnsupportedOperationException("Database creation isn't supported for this vendor");
+    }
+
+    default String createDatabaseDdl(String databaseName) {
+        throw new UnsupportedOperationException("Database creation isn't supported for this vendor");
+    }
 }

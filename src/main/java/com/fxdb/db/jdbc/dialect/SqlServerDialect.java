@@ -20,4 +20,19 @@ public class SqlServerDialect extends AbstractSqlDialect {
         // every one of them shows up as a plain "VIEW" to DatabaseMetaData, same as a real view.
         return Set.of("sys", "information_schema");
     }
+
+    @Override
+    public boolean supportsDatabaseCreation() {
+        return true;
+    }
+
+    @Override
+    public String adminDatabase() {
+        return "master";
+    }
+
+    @Override
+    public String createDatabaseDdl(String databaseName) {
+        return "CREATE DATABASE " + quoteIdentifier(databaseName);
+    }
 }
