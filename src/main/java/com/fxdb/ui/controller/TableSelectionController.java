@@ -4,6 +4,7 @@ import com.fxdb.core.SchemaProvider;
 import com.fxdb.core.model.TableSchema;
 import com.fxdb.mapping.MappingEngine;
 import com.fxdb.mapping.model.TableMapping;
+import com.fxdb.ui.BackgroundTasks;
 import com.fxdb.ui.MigrationWizardContext;
 import com.fxdb.ui.Navigator;
 import com.fxdb.ui.WizardScreen;
@@ -51,17 +52,24 @@ public class TableSelectionController implements WizardScreen {
     }
 
     private void loadSourceTables() {
-        try (SchemaProvider provider = context.getSource().createSchemaProvider()) {
-            List<TableSelectionRow> rows = new ArrayList<>();
-            for (String table : provider.listTables()) {
-                rows.add(new TableSelectionRow(table));
-            }
-            tableList.setItems(FXCollections.observableArrayList(rows));
-            statusLabel.setText(rows.size() + " table(s)/sheet(s) found.");
-        } catch (Exception e) {
-            statusLabel.setText("Failed to list source tables: " + e.getMessage());
-            statusLabel.setStyle("-fx-text-fill: red;");
-        }
+        BackgroundTasks.run(navigator, "Loading source tables...",
+                () -> {
+                    try (SchemaProvider provider = context.getSource().createSchemaProvider()) {
+                        List<TableSelectionRow> rows = new ArrayList<>();
+                        for (String table : provider.listTables()) {
+                            rows.add(new TableSelectionRow(table));
+                        }
+                        return rows;
+                    }
+                },
+                rows -> {
+                    tableList.setItems(FXCollections.observableArrayList(rows));
+                    statusLabel.setText(rows.size() + " table(s)/sheet(s) found.");
+                },
+                ex -> {
+                    statusLabel.setText("Failed to list source tables: " + ex.getMessage());
+                    statusLabel.setStyle("-fx-text-fill: red;");
+                });
     }
 
     @FXML
@@ -79,26 +87,29 @@ public class TableSelectionController implements WizardScreen {
             return;
         }
 
-        try {
-            List<TableMapping> mappings = new ArrayList<>();
-            try (SchemaProvider sourceProvider = context.getSource().createSchemaProvider();
-                 SchemaProvider targetProvider = context.getTarget().createSchemaProvider()) {
+        BackgroundTasks.run(navigator, "Preparing column mappings...",
+                () -> {
+                    List<TableMapping> mappings = new ArrayList<>();
+                    try (SchemaProvider sourceProvider = context.getSource().createSchemaProvider();
+                         SchemaProvider targetProvider = context.getTarget().createSchemaProvider()) {
 
-                List<String> existingTargetTables = targetProvider.listTables();
+                        List<String> existingTargetTables = targetProvider.listTables();
 
-                for (TableSelectionRow row : selected) {
-                    TableSchema sourceSchema = sourceProvider.describeTable(row.getSourceTable());
-                    String targetTableName = row.getTargetTable();
-                    TableSchema targetSchema = existingTargetTables.contains(targetTableName)
-                            ? targetProvider.describeTable(targetTableName)
-                            : null;
-                    mappings.add(MappingEngine.autoMatch(sourceSchema, targetTableName, targetSchema));
-                }
-            }
-            context.setTableMappings(mappings);
-            navigator.showMappingGrid();
-        } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Failed to prepare mappings: " + e.getMessage()).showAndWait();
-        }
+                        for (TableSelectionRow row : selected) {
+                            TableSchema sourceSchema = sourceProvider.describeTable(row.getSourceTable());
+                            String targetTableName = row.getTargetTable();
+                            TableSchema targetSchema = existingTargetTables.contains(targetTableName)
+                                    ? targetProvider.describeTable(targetTableName)
+                                    : null;
+                            mappings.add(MappingEngine.autoMatch(sourceSchema, targetTableName, targetSchema));
+                        }
+                    }
+                    return mappings;
+                },
+                mappings -> {
+                    context.setTableMappings(mappings);
+                    navigator.showMappingGrid();
+                },
+                ex -> new Alert(Alert.AlertType.ERROR, "Failed to prepare mappings: " + ex.getMessage()).showAndWait());
     }
 }

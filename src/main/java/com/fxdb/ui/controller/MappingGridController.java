@@ -9,6 +9,7 @@ import com.fxdb.mapping.model.ColumnMapping;
 import com.fxdb.mapping.model.ColumnTransform;
 import com.fxdb.mapping.model.MigrationProfile;
 import com.fxdb.mapping.model.TableMapping;
+import com.fxdb.ui.BackgroundTasks;
 import com.fxdb.ui.MigrationWizardContext;
 import com.fxdb.ui.Navigator;
 import com.fxdb.ui.WizardScreen;
@@ -44,15 +45,32 @@ public class MappingGridController implements WizardScreen {
     }
 
     private void rebuildTabs() {
+        List<TableMapping> mappings = context.getTableMappings();
+        BackgroundTasks.run(navigator, "Loading table schemas...",
+                () -> fetchSourceSchemas(mappings),
+                schemas -> applyTabs(mappings, schemas),
+                ex -> new Alert(Alert.AlertType.ERROR, "Failed to load table schemas: " + ex.getMessage()).showAndWait());
+    }
+
+    /** One SchemaProvider reused across every table, instead of opening/closing a connection per table. */
+    private List<TableSchema> fetchSourceSchemas(List<TableMapping> mappings) throws Exception {
+        List<TableSchema> schemas = new ArrayList<>();
+        try (SchemaProvider provider = context.getSource().createSchemaProvider()) {
+            for (TableMapping mapping : mappings) {
+                schemas.add(provider.describeTable(mapping.getSourceTable()));
+            }
+        }
+        return schemas;
+    }
+
+    private void applyTabs(List<TableMapping> mappings, List<TableSchema> schemas) {
         tabPane.getTabs().clear();
-        for (TableMapping mapping : context.getTableMappings()) {
-            tabPane.getTabs().add(buildTab(mapping));
+        for (int i = 0; i < mappings.size(); i++) {
+            tabPane.getTabs().add(buildTab(mappings.get(i), schemas.get(i)));
         }
     }
 
-    private Tab buildTab(TableMapping mapping) {
-        TableSchema sourceSchema = describeSource(mapping.getSourceTable());
-
+    private Tab buildTab(TableMapping mapping, TableSchema sourceSchema) {
         TableView<ColumnMappingRow> table = new TableView<>();
         table.setEditable(true);
 
@@ -129,33 +147,31 @@ public class MappingGridController implements WizardScreen {
         return FXCollections.observableArrayList(rows);
     }
 
-    private TableSchema describeSource(String sourceTable) {
-        try (SchemaProvider provider = context.getSource().createSchemaProvider()) {
-            return provider.describeTable(sourceTable);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     @FXML
     private void onAutoMatch() {
-        try (SchemaProvider sourceProvider = context.getSource().createSchemaProvider();
-             SchemaProvider targetProvider = context.getTarget().createSchemaProvider()) {
+        List<TableMapping> mappings = context.getTableMappings();
+        BackgroundTasks.run(navigator, "Re-running auto-match...",
+                () -> {
+                    List<TableMapping> refreshed = new ArrayList<>();
+                    try (SchemaProvider sourceProvider = context.getSource().createSchemaProvider();
+                         SchemaProvider targetProvider = context.getTarget().createSchemaProvider()) {
 
-            List<String> existingTargetTables = targetProvider.listTables();
-            List<TableMapping> refreshed = new ArrayList<>();
-            for (TableMapping mapping : context.getTableMappings()) {
-                TableSchema sourceSchema = sourceProvider.describeTable(mapping.getSourceTable());
-                TableSchema targetSchema = existingTargetTables.contains(mapping.getTargetTable())
-                        ? targetProvider.describeTable(mapping.getTargetTable())
-                        : null;
-                refreshed.add(MappingEngine.autoMatch(sourceSchema, mapping.getTargetTable(), targetSchema));
-            }
-            context.setTableMappings(refreshed);
-            rebuildTabs();
-        } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Auto-match failed: " + e.getMessage()).showAndWait();
-        }
+                        List<String> existingTargetTables = targetProvider.listTables();
+                        for (TableMapping mapping : mappings) {
+                            TableSchema sourceSchema = sourceProvider.describeTable(mapping.getSourceTable());
+                            TableSchema targetSchema = existingTargetTables.contains(mapping.getTargetTable())
+                                    ? targetProvider.describeTable(mapping.getTargetTable())
+                                    : null;
+                            refreshed.add(MappingEngine.autoMatch(sourceSchema, mapping.getTargetTable(), targetSchema));
+                        }
+                    }
+                    return refreshed;
+                },
+                refreshed -> {
+                    context.setTableMappings(refreshed);
+                    rebuildTabs();
+                },
+                ex -> new Alert(Alert.AlertType.ERROR, "Auto-match failed: " + ex.getMessage()).showAndWait());
     }
 
     @FXML

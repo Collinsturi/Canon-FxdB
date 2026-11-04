@@ -6,6 +6,7 @@ import com.fxdb.db.jdbc.JdbcConnectionConfig;
 import com.fxdb.db.jdbc.SqlServerConnectionOptions;
 import com.fxdb.file.FileConnectionConfig;
 import com.fxdb.file.FileFormat;
+import com.fxdb.ui.BackgroundTasks;
 import com.fxdb.ui.MigrationWizardContext;
 import com.fxdb.ui.Navigator;
 import com.fxdb.ui.WizardScreen;
@@ -333,19 +334,32 @@ public class ConnectionSetupController implements WizardScreen {
         FlowPane tableList = isSource ? sourceTableList : targetTableList;
         tableList.getChildren().clear();
         setTableListVisible(tableListScroll, false);
+
+        ConnectionSelection selection;
         try {
-            ConnectionSelection selection = buildSelection(isSource);
-            try (SchemaProvider provider = selection.createSchemaProvider()) {
-                List<String> tables = provider.listTables();
-                status.setText("Connected successfully - " + tables.size() + " table(s) found");
-                status.setStyle("-fx-text-fill: green;");
-                tables.stream().sorted().forEach(table -> tableList.getChildren().add(tableChip(table)));
-                setTableListVisible(tableListScroll, !tables.isEmpty());
-            }
+            selection = buildSelection(isSource);
         } catch (Exception e) {
             status.setText("Failed: " + e.getMessage());
             status.setStyle("-fx-text-fill: red;");
+            return;
         }
+
+        BackgroundTasks.run(navigator, "Testing connection...",
+                () -> {
+                    try (SchemaProvider provider = selection.createSchemaProvider()) {
+                        return provider.listTables();
+                    }
+                },
+                tables -> {
+                    status.setText("Connected successfully - " + tables.size() + " table(s) found");
+                    status.setStyle("-fx-text-fill: green;");
+                    tables.stream().sorted().forEach(table -> tableList.getChildren().add(tableChip(table)));
+                    setTableListVisible(tableListScroll, !tables.isEmpty());
+                },
+                ex -> {
+                    status.setText("Failed: " + ex.getMessage());
+                    status.setStyle("-fx-text-fill: red;");
+                });
     }
 
     private void setTableListVisible(ScrollPane scrollPane, boolean visible) {
