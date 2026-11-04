@@ -20,15 +20,22 @@ public final class DatabaseProvisioner {
     private DatabaseProvisioner() {
     }
 
-    /** @return true if the database was just created, false if it already existed. */
-    public static boolean ensureDatabaseExists(DriverRegistry provider, String host, int port,
-                                                String databaseName, String username, String password) {
+    /**
+     * @param adminUrl a JDBC URL already pointed at {@link SqlDialect#adminDatabase()} - built
+     *                 by the caller the same way it builds the real target URL, so any extra
+     *                 connection properties (SQL Server's encrypt/trustServerCertificate/
+     *                 authentication, say) carry over to this connection too. A URL built fresh
+     *                 from just host/port here would silently drop those and could fail (e.g. a
+     *                 TLS trust error) even though the real target connection works fine.
+     * @return true if the database was just created, false if it already existed.
+     */
+    public static boolean ensureDatabaseExists(DriverRegistry provider, String adminUrl, String databaseName,
+                                                String username, String password) {
         SqlDialect dialect = provider.dialect();
         if (!dialect.supportsDatabaseCreation()) {
             throw new FxDbException("Creating a database isn't supported for " + provider.displayName());
         }
 
-        String adminUrl = provider.buildUrl(host, port, dialect.adminDatabase());
         try (Connection connection = DriverManager.getConnection(adminUrl, username, password)) {
             if (databaseExists(connection, databaseName)) {
                 return false;
@@ -39,8 +46,7 @@ public final class DatabaseProvisioner {
             return true;
         } catch (SQLException e) {
             throw new FxDbException(
-                    "Failed to create database '" + databaseName + "' on " + host + ":" + port
-                            + ": " + JdbcErrors.describe(e), e);
+                    "Failed to create database '" + databaseName + "': " + JdbcErrors.describe(e), e);
         }
     }
 

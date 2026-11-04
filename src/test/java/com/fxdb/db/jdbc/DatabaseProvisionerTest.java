@@ -10,7 +10,7 @@ class DatabaseProvisionerTest {
     @Test
     void refusesToCreateADatabaseForAnUnsupportedVendor() {
         assertThatThrownBy(() -> DatabaseProvisioner.ensureDatabaseExists(
-                DriverRegistry.ORACLE, "localhost", 1521, "new_db", "user", "pass"))
+                DriverRegistry.ORACLE, "jdbc:oracle:thin:@//localhost:1521/XE", "new_db", "user", "pass"))
                 .isInstanceOf(FxDbException.class)
                 .hasMessageContaining("Oracle");
     }
@@ -18,7 +18,7 @@ class DatabaseProvisionerTest {
     @Test
     void refusesForSqliteToo() {
         assertThatThrownBy(() -> DatabaseProvisioner.ensureDatabaseExists(
-                DriverRegistry.SQLITE, "localhost", -1, "new_db", null, null))
+                DriverRegistry.SQLITE, "jdbc:sqlite:test.db", "new_db", null, null))
                 .isInstanceOf(FxDbException.class)
                 .hasMessageContaining("SQLite");
     }

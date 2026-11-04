@@ -392,10 +392,18 @@ public class ConnectionSetupController implements WizardScreen {
         } catch (NumberFormatException | NullPointerException e) {
             parsedPort = provider.defaultPort();
         }
-        int port = parsedPort;
+
+        // Same pattern recomputeUrl uses for the real target URL - vendor-specific extras
+        // (SQL Server's encrypt/trustServerCertificate/authentication) have to carry over to
+        // this admin connection too, or it can fail even when the real target connection works.
+        String adminUrl = provider.buildUrl(host, parsedPort, provider.dialect().adminDatabase());
+        if (provider == DriverRegistry.SQLSERVER) {
+            adminUrl = buildSqlServerOptions(false).appendTo(adminUrl);
+        }
+        String finalAdminUrl = adminUrl;
 
         BackgroundTasks.run(navigator, "Creating database...",
-                () -> DatabaseProvisioner.ensureDatabaseExists(provider, host, port, database, username, password),
+                () -> DatabaseProvisioner.ensureDatabaseExists(provider, finalAdminUrl, database, username, password),
                 created -> {
                     targetStatus.setText("Database '" + database + "' "
                             + (created ? "created" : "already exists"));
