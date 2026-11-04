@@ -15,13 +15,14 @@ import java.io.IOException;
 /**
  * Swaps the wizard's five screens in and out of one Stage, handing each controller the
  * shared context. The Stage's Scene root is a persistent shell (stepper on top, current
- * screen plus a busy overlay in the center, a bottom tab-strip panel hosting the query log)
- * rather than being replaced wholesale each navigation, so the step indicator, overlay, and
- * query log all survive across screens.
+ * screen plus a busy overlay in the center, a bottom tab-strip panel hosting the query log and
+ * migration errors) rather than being replaced wholesale each navigation, so the step
+ * indicator, overlay, and bottom tabs all survive across screens.
  */
 public class Navigator {
 
     private static final String QUERY_LOG_TAB = "Query Log";
+    private static final String ERRORS_TAB = "Errors";
 
     /** Step index (0-based) from which the query log is forced open - Run and Report, the two
      * stages where a query has actually been fired against a real database. Earlier stages
@@ -37,6 +38,7 @@ public class Navigator {
     private final BorderPane shell = new BorderPane();
     private final BottomTabPanel bottomPanel = new BottomTabPanel();
     private final QueryLogView queryLogView = new QueryLogView();
+    private final ErrorLogView errorLogView = new ErrorLogView();
 
     private int currentStepIndex = 0;
 
@@ -44,6 +46,7 @@ public class Navigator {
         this.stage = stage;
 
         bottomPanel.addTab(QUERY_LOG_TAB, queryLogView);
+        bottomPanel.addTab(ERRORS_TAB, errorLogView);
 
         shell.setTop(stepper);
         shell.setCenter(contentStack);
@@ -110,6 +113,23 @@ public class Navigator {
         } catch (IOException e) {
             throw new FxDbException("Failed to load screen " + fxmlFileName, e);
         }
+    }
+
+    /**
+     * Logs a migration-run error and, unless the user is already looking at the Errors tab,
+     * switches focus to it - they can still freely switch back to Query Log afterward, this
+     * only grabs focus on the moment a *new* error shows up.
+     */
+    public void reportError(String message) {
+        errorLogView.append(message);
+        if (!bottomPanel.isTabActive(ERRORS_TAB)) {
+            bottomPanel.openTab(ERRORS_TAB);
+        }
+    }
+
+    /** Clears the Errors tab's history - called at the start of a fresh migration run. */
+    public void clearErrors() {
+        errorLogView.clear();
     }
 
     private void updateQueryLogVisibility() {

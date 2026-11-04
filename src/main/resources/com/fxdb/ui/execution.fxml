@@ -36,7 +36,6 @@
                     <TableColumn fx:id="errorCountColumn" text="Errors" prefWidth="80"/>
                 </columns>
             </TableView>
-            <TextArea fx:id="logArea" editable="false" prefHeight="150"/>
         </VBox>
     </center>
     <bottom>

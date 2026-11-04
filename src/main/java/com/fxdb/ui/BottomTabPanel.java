@@ -79,6 +79,11 @@ public class BottomTabPanel extends BorderPane {
         tabButtons.values().forEach(b -> b.setStyle(TAB_INACTIVE_STYLE));
     }
 
+    /** True when {@code title} is the tab currently open/showing - i.e. the user is looking at it. */
+    public boolean isTabActive(String title) {
+        return title.equals(activeTab);
+    }
+
     public void setTabDisabled(String title, boolean disabled) {
         Button button = tabButtons.get(title);
         if (button != null) {

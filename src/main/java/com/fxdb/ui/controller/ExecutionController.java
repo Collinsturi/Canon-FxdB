@@ -19,7 +19,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,6 @@ public class ExecutionController implements WizardScreen {
     @FXML private TableColumn<TableTransferResultRow, Number> rowsSkippedColumn;
     @FXML private TableColumn<TableTransferResultRow, String> statusColumn;
     @FXML private TableColumn<TableTransferResultRow, Number> errorCountColumn;
-    @FXML private TextArea logArea;
     @FXML private Button backButton;
     @FXML private Button summaryButton;
 
@@ -78,7 +76,7 @@ public class ExecutionController implements WizardScreen {
         context.setErrorPolicy(errorPolicyBox.getValue());
         resultRows.clear();
         collectedResults.clear();
-        logArea.clear();
+        navigator.clearErrors();
 
         List<TableJob> jobs = new ArrayList<>();
         for (TableMapping mapping : context.getTableMappings()) {
@@ -92,7 +90,7 @@ public class ExecutionController implements WizardScreen {
                     collectedResults.add(result);
                     resultRows.add(new TableTransferResultRow(result));
                 },
-                logLine -> logArea.appendText(logLine + System.lineSeparator()));
+                navigator::reportError);
 
         progressBar.progressProperty().bind(service.progressProperty());
         messageLabel.textProperty().bind(service.messageProperty());
@@ -100,7 +98,7 @@ public class ExecutionController implements WizardScreen {
         service.setOnSucceeded(e -> onRunFinished());
         service.setOnCancelled(e -> onRunFinished());
         service.setOnFailed(e -> {
-            logArea.appendText("Run failed: " + service.getException() + System.lineSeparator());
+            navigator.reportError("Run failed: " + service.getException());
             onRunFinished();
         });
 
