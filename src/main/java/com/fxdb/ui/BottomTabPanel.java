@@ -15,10 +15,10 @@ import java.util.Set;
 
 /**
  * A bottom-docked, browser-tab-styled strip - tabs cluster in the bottom-left corner, clicking
- * one opens its content above the strip, clicking the already-open one (or the collapse arrow
- * on the right) collapses it again (the strip itself never disappears). Generic on purpose, no
- * knowledge of what any tab holds, so any screen can register its own tab here (the query log
- * today, an "Errors" tab during a migration run, or anything else later).
+ * one opens its content above the strip. A collapse arrow in the top-right corner of the open
+ * content (or clicking the tab again) closes it (the tab strip itself never disappears).
+ * Generic on purpose, no knowledge of what any tab holds, so any screen can register its own
+ * tab here (the query log today, an "Errors" tab during a migration run, or anything else later).
  */
 public class BottomTabPanel extends BorderPane {
 
@@ -30,41 +30,47 @@ public class BottomTabPanel extends BorderPane {
                     + "-fx-padding: 4 14 4 14; -fx-font-size: 11px; -fx-font-weight: bold; "
                     + "-fx-border-color: #2d7dd2 transparent transparent transparent; -fx-border-width: 2 0 0 0;";
     private static final String TOP_EDGE_BORDER = "-fx-border-color: #999999; -fx-border-width: 2 0 0 0;";
+    private static final String COLLAPSE_ARROW_STYLE =
+            "-fx-background-color: #e8e8e8; -fx-background-radius: 4; -fx-font-size: 15px; "
+                    + "-fx-padding: 2 10 2 10; -fx-text-fill: #444444;";
 
     private final Map<String, Node> contents = new LinkedHashMap<>();
     private final Map<String, Button> tabButtons = new LinkedHashMap<>();
     private final Set<String> pinned = new HashSet<>();
-    private final HBox tabButtonsBox = new HBox(2);
+    private final HBox tabBar = new HBox(2);
     private final Button collapseArrow = new Button("▾"); // ▾
-    private final BorderPane tabBar = new BorderPane();
+    private final BorderPane contentHeader = new BorderPane();
     private final StackPane contentArea = new StackPane();
+    private final BorderPane contentHost = new BorderPane();
 
     private String activeTab;
 
     public BottomTabPanel() {
-        tabButtonsBox.setAlignment(Pos.CENTER_LEFT);
+        tabBar.setAlignment(Pos.CENTER_LEFT);
+        tabBar.setPadding(new Insets(4, 8, 4, 8));
+        tabBar.setStyle("-fx-background-color: #f4f4f4; -fx-border-color: #cccccc; -fx-border-width: 1 0 0 0;");
 
-        collapseArrow.setStyle("-fx-background-color: transparent; -fx-font-size: 11px; "
-                + "-fx-padding: 4 10 4 10; -fx-text-fill: #666666;");
+        collapseArrow.setStyle(COLLAPSE_ARROW_STYLE);
         collapseArrow.setFocusTraversable(false);
-        collapseArrow.setVisible(false);
-        collapseArrow.setManaged(false);
         collapseArrow.setOnAction(e -> {
             if (activeTab != null && !pinned.contains(activeTab)) {
                 collapse();
             }
         });
 
-        tabBar.setLeft(tabButtonsBox);
-        tabBar.setRight(collapseArrow);
-        tabBar.setPadding(new Insets(4, 8, 0, 8));
-        tabBar.setStyle("-fx-background-color: #f4f4f4;" + TOP_EDGE_BORDER);
+        // A thin header above the actual tab content, holding just the collapse arrow in its
+        // top-right corner - big enough to be an obvious click target without eating into the
+        // content area itself.
+        contentHeader.setRight(collapseArrow);
+        contentHeader.setPadding(new Insets(6, 8, 6, 8));
+        contentHeader.setStyle("-fx-background-color: #fafafa;" + TOP_EDGE_BORDER);
 
-        contentArea.setStyle("-fx-background-color: white;" + TOP_EDGE_BORDER);
-        contentArea.setManaged(false);
-        contentArea.setVisible(false);
+        contentHost.setTop(contentHeader);
+        contentHost.setCenter(contentArea);
+        contentHost.setManaged(false);
+        contentHost.setVisible(false);
 
-        setCenter(contentArea);
+        setCenter(contentHost);
         setBottom(tabBar);
     }
 
@@ -85,27 +91,23 @@ public class BottomTabPanel extends BorderPane {
             }
         });
         tabButtons.put(title, button);
-        tabButtonsBox.getChildren().add(button);
+        tabBar.getChildren().add(button);
     }
 
     public void openTab(String title) {
         activeTab = title;
         contentArea.getChildren().setAll(contents.get(title));
-        contentArea.setManaged(true);
-        contentArea.setVisible(true);
+        contentHost.setManaged(true);
+        contentHost.setVisible(true);
         tabButtons.forEach((t, b) -> b.setStyle(t.equals(title) ? TAB_ACTIVE_STYLE : TAB_INACTIVE_STYLE));
-        collapseArrow.setVisible(true);
-        collapseArrow.setManaged(true);
         collapseArrow.setDisable(pinned.contains(title));
     }
 
     public void collapse() {
         activeTab = null;
-        contentArea.setManaged(false);
-        contentArea.setVisible(false);
+        contentHost.setManaged(false);
+        contentHost.setVisible(false);
         tabButtons.values().forEach(b -> b.setStyle(TAB_INACTIVE_STYLE));
-        collapseArrow.setVisible(false);
-        collapseArrow.setManaged(false);
     }
 
     /** True when {@code title} is the tab currently open/showing - i.e. the user is looking at it. */
