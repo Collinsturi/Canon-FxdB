@@ -8,8 +8,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A bottom-docked, browser-tab-styled strip - tabs cluster in the bottom-left corner, clicking
@@ -30,6 +32,7 @@ public class BottomTabPanel extends BorderPane {
 
     private final Map<String, Node> contents = new LinkedHashMap<>();
     private final Map<String, Button> tabButtons = new LinkedHashMap<>();
+    private final Set<String> pinned = new HashSet<>();
     private final HBox tabBar = new HBox(2);
     private final StackPane contentArea = new StackPane();
 
@@ -55,7 +58,11 @@ public class BottomTabPanel extends BorderPane {
         button.setStyle(TAB_INACTIVE_STYLE);
         button.setOnAction(e -> {
             if (title.equals(activeTab)) {
-                collapse();
+                // Pinned means "can't be collapsed while active" - not "can't be switched to/from,"
+                // so a pinned tab stays fully reachable from any other tab the whole time.
+                if (!pinned.contains(title)) {
+                    collapse();
+                }
             } else {
                 openTab(title);
             }
@@ -84,10 +91,17 @@ public class BottomTabPanel extends BorderPane {
         return title.equals(activeTab);
     }
 
-    public void setTabDisabled(String title, boolean disabled) {
-        Button button = tabButtons.get(title);
-        if (button != null) {
-            button.setDisable(disabled);
+    /**
+     * While pinned, clicking {@code title} when it's already the active tab does nothing - it
+     * can't be collapsed - but it stays fully clickable to switch to from any other tab, and
+     * other tabs stay reachable from it too. Use this instead of disabling the button outright,
+     * which would also block switching back to it later.
+     */
+    public void setTabPinned(String title, boolean pinned) {
+        if (pinned) {
+            this.pinned.add(title);
+        } else {
+            this.pinned.remove(title);
         }
     }
 }

@@ -41,6 +41,7 @@ public class Navigator {
     private final ErrorLogView errorLogView = new ErrorLogView();
 
     private int currentStepIndex = 0;
+    private boolean queryLogWasForced = false;
 
     public Navigator(Stage stage) {
         this.stage = stage;
@@ -134,9 +135,13 @@ public class Navigator {
 
     private void updateQueryLogVisibility() {
         boolean forced = currentStepIndex >= QUERY_LOG_FORCED_FROM_STEP;
-        bottomPanel.setTabDisabled(QUERY_LOG_TAB, forced);
-        if (forced) {
+        bottomPanel.setTabPinned(QUERY_LOG_TAB, forced);
+        // Only auto-open on the moment we enter the forced zone (Mapping -> Run), not on every
+        // navigation within it - otherwise going Run -> Report would yank focus back from
+        // whatever tab (e.g. Errors) the user was actually looking at.
+        if (forced && !queryLogWasForced) {
             bottomPanel.openTab(QUERY_LOG_TAB);
         }
+        queryLogWasForced = forced;
     }
 }
