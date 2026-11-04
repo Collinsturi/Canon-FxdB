@@ -4,6 +4,7 @@ import com.fxdb.core.SchemaProvider;
 import com.fxdb.db.jdbc.DatabaseProvisioner;
 import com.fxdb.db.jdbc.DriverRegistry;
 import com.fxdb.db.jdbc.JdbcConnectionConfig;
+import com.fxdb.db.jdbc.SchemaCopier;
 import com.fxdb.db.jdbc.SqlServerConnectionOptions;
 import com.fxdb.file.FileConnectionConfig;
 import com.fxdb.file.FileFormat;
@@ -402,17 +403,66 @@ public class ConnectionSetupController implements WizardScreen {
         }
         String finalAdminUrl = adminUrl;
 
+        // Resolved here, on the FX thread, same as everything above - the background task below
+        // must never touch a JavaFX control itself.
+        JdbcConnectionConfig targetConfig;
+        try {
+            ConnectionSelection target = buildSelection(false);
+            if (!(target instanceof ConnectionSelection.Jdbc jdbcTarget)) {
+                targetStatus.setText("Failed: target isn't a database connection");
+                targetStatus.setStyle("-fx-text-fill: red;");
+                return;
+            }
+            targetConfig = jdbcTarget.config();
+        } catch (Exception e) {
+            targetStatus.setText("Failed: " + e.getMessage());
+            targetStatus.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        // Schema copying only makes sense source-database -> target-database. If the source
+        // isn't a database (a file) or isn't filled in/valid yet, just skip it - database
+        // creation still goes ahead on its own.
+        JdbcConnectionConfig sourceConfig = null;
+        if ("Database".equals(sourceKind.getValue())) {
+            try {
+                ConnectionSelection source = buildSelection(true);
+                if (source instanceof ConnectionSelection.Jdbc jdbcSource) {
+                    sourceConfig = jdbcSource.config();
+                }
+            } catch (Exception ignored) {
+                // Left for the user to notice on the source panel's own Test Connection/status.
+            }
+        }
+        JdbcConnectionConfig finalSourceConfig = sourceConfig;
+
         BackgroundTasks.run(navigator, "Creating database...",
-                () -> DatabaseProvisioner.ensureDatabaseExists(provider, finalAdminUrl, database, username, password),
-                created -> {
-                    targetStatus.setText("Database '" + database + "' "
-                            + (created ? "created" : "already exists"));
+                () -> {
+                    boolean created = DatabaseProvisioner.ensureDatabaseExists(
+                            provider, finalAdminUrl, database, username, password);
+                    int tablesCopied = -1;
+                    if (finalSourceConfig != null) {
+                        tablesCopied = SchemaCopier.copyAllTables(finalSourceConfig, targetConfig);
+                    }
+                    return new CreateDatabaseOutcome(created, tablesCopied);
+                },
+                outcome -> {
+                    StringBuilder message = new StringBuilder("Database '" + database + "' "
+                            + (outcome.created() ? "created" : "already exists"));
+                    if (outcome.tablesCopied() >= 0) {
+                        message.append(" - ").append(outcome.tablesCopied()).append(" table(s) copied from source");
+                    }
+                    targetStatus.setText(message.toString());
                     targetStatus.setStyle("-fx-text-fill: green;");
                 },
                 ex -> {
                     targetStatus.setText("Failed: " + ex.getMessage());
                     targetStatus.setStyle("-fx-text-fill: red;");
                 });
+    }
+
+    /** @param tablesCopied -1 when schema copying wasn't attempted (source isn't a database). */
+    private record CreateDatabaseOutcome(boolean created, int tablesCopied) {
     }
 
     private void setTableListVisible(ScrollPane scrollPane, boolean visible) {
