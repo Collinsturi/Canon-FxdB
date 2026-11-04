@@ -20,9 +20,10 @@ class QueryLogTest {
         List<QueryLog.Entry> received = new ArrayList<>();
         QueryLog.setListener(received::add);
 
-        QueryLog.record("jdbc:postgresql://localhost/db", "SELECT * FROM customers");
+        QueryLog.record(QueryLog.Role.SOURCE, "jdbc:postgresql://localhost/db", "SELECT * FROM customers");
 
         assertThat(received).hasSize(1);
+        assertThat(received.get(0).role()).isEqualTo(QueryLog.Role.SOURCE);
         assertThat(received.get(0).jdbcUrl()).isEqualTo("jdbc:postgresql://localhost/db");
         assertThat(received.get(0).sql()).isEqualTo("SELECT * FROM customers");
         assertThat(received.get(0).timestamp()).isNotNull();
@@ -30,7 +31,7 @@ class QueryLogTest {
 
     @Test
     void recordingWithNoListenerRegisteredDoesNothing() {
-        QueryLog.record("jdbc:sqlite:test.db", "SELECT 1");
+        QueryLog.record(QueryLog.Role.TARGET, "jdbc:sqlite:test.db", "SELECT 1");
         // No exception, no listener - nothing to assert beyond "didn't blow up."
     }
 }

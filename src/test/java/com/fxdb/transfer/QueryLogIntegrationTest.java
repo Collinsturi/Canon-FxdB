@@ -50,5 +50,12 @@ class QueryLogIntegrationTest {
                 .anyMatch(sql -> sql.startsWith("CREATE TABLE"))
                 .anyMatch(sql -> sql.startsWith("INSERT INTO") && sql.contains("batch of 2 row(s)"));
         assertThat(recorded).allMatch(e -> e.jdbcUrl().equals(sourceUrl) || e.jdbcUrl().equals(targetUrl));
+
+        assertThat(recorded)
+                .filteredOn(e -> e.sql().equals("SELECT * FROM customers"))
+                .allMatch(e -> e.role() == QueryLog.Role.SOURCE && e.jdbcUrl().equals(sourceUrl));
+        assertThat(recorded)
+                .filteredOn(e -> e.sql().startsWith("CREATE TABLE") || e.sql().startsWith("INSERT INTO"))
+                .allMatch(e -> e.role() == QueryLog.Role.TARGET && e.jdbcUrl().equals(targetUrl));
     }
 }

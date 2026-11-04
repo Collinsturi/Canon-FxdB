@@ -12,7 +12,12 @@ import java.util.function.Consumer;
  */
 public final class QueryLog {
 
-    public record Entry(Instant timestamp, String jdbcUrl, String sql) {
+    /** Which side of a migration a statement ran against - lets the UI tag/color entries. */
+    public enum Role {
+        SOURCE, TARGET
+    }
+
+    public record Entry(Instant timestamp, Role role, String jdbcUrl, String sql) {
     }
 
     private static volatile Consumer<Entry> listener = entry -> {
@@ -26,7 +31,7 @@ public final class QueryLog {
         } : newListener;
     }
 
-    public static void record(String jdbcUrl, String sql) {
-        listener.accept(new Entry(Instant.now(), jdbcUrl, sql));
+    public static void record(Role role, String jdbcUrl, String sql) {
+        listener.accept(new Entry(Instant.now(), role, jdbcUrl, sql));
     }
 }

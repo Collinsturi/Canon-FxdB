@@ -67,7 +67,7 @@ public class JdbcDataSink implements DataSink {
     private void createTable(TableSchema schema) {
         SqlDialect dialect = DriverRegistry.fromJdbcUrl(config.jdbcUrl()).dialect();
         String ddl = dialect.createTableDdl(schema);
-        QueryLog.record(config.jdbcUrl(), ddl);
+        QueryLog.record(QueryLog.Role.TARGET, config.jdbcUrl(), ddl);
         try (Statement statement = connection.createStatement()) {
             statement.execute(ddl);
             connection.commit();
@@ -91,7 +91,7 @@ public class JdbcDataSink implements DataSink {
                 }
                 insertStatement.addBatch();
             }
-            QueryLog.record(config.jdbcUrl(), insertSql + " -- batch of " + batch.size() + " row(s)");
+            QueryLog.record(QueryLog.Role.TARGET, config.jdbcUrl(), insertSql + " -- batch of " + batch.size() + " row(s)");
             insertStatement.executeBatch();
         } catch (SQLException e) {
             throw new TransferException(

@@ -52,7 +52,7 @@ public class JdbcDataSource implements DataSource {
     @Override
     public long estimateRowCount() {
         String sql = "SELECT COUNT(*) FROM " + tableName;
-        QueryLog.record(config.jdbcUrl(), sql);
+        QueryLog.record(QueryLog.Role.SOURCE, config.jdbcUrl(), sql);
         try (PreparedStatement ps = connection.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getLong(1) : -1;
@@ -72,7 +72,7 @@ public class JdbcDataSource implements DataSource {
                     ResultSet.TYPE_FORWARD_ONLY,
                     ResultSet.CONCUR_READ_ONLY);
             statement.setFetchSize(batchSize);
-            QueryLog.record(config.jdbcUrl(), sql);
+            QueryLog.record(QueryLog.Role.SOURCE, config.jdbcUrl(), sql);
             resultSet = statement.executeQuery();
         } catch (SQLException e) {
             throw new TransferException("Failed to query " + tableName + ": " + JdbcErrors.describe(e), e);
