@@ -48,7 +48,9 @@ public final class WizardStepper extends HBox {
             if (i < STEP_LABELS.length - 1) {
                 Region connector = new Region();
                 connector.setPrefWidth(30);
-                connector.setStyle("-fx-border-color: #cccccc; -fx-border-width: 0 0 1 0;");
+                connector.setPrefHeight(3);
+                connector.setMaxHeight(3);
+                connector.setStyle("-fx-background-color: #cccccc; -fx-background-radius: 2;");
                 getChildren().add(connector);
             }
         }
